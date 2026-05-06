@@ -44,12 +44,16 @@ Este projeto foi desenvolvido aplicando conceitos fundamentais de Ciência da Co
 
 ## 🕹️ Controles
 
+<div align="center">
+
 | Ação | Teclado |
 | :--- | :--- |
 | **Acertar Notas** | `Setas` (↑, ↓, ←, →) ou `W`, `A`, `S`, `D` |
 | **Navegar no Menu** | `Setas` (↑, ↓) |
 | **Selecionar Opção** | `Enter` |
 | **Sair/Voltar** | `ESC` |
+
+</div>
 
 ---
 
@@ -74,7 +78,7 @@ Certifique-se de ter instalado em sua máquina:
 
 Abra seu terminal e execute:
 ```bash
-git clone [https://github.com/SEU_USUARIO/Recife_Beat.git](https://github.com/SEU_USUARIO/Recife_Beat.git)
+git clone [https://github.com/erosamancio/Recife_Beat.git](https://github.com/erosamancio/Recife_Beat.git)
 cd Recife_Beat
 ```
 
