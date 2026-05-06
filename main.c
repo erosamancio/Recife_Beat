@@ -39,7 +39,7 @@ int main() {
 
         if (tempo_atual_ms >= 216000) break;
 
-        int teclas[] = { KEY_D, KEY_F, KEY_J, KEY_K };
+        int teclas[] = { KEY_LEFT, KEY_UP, KEY_DOWN, KEY_RIGHT };
         for (int i = 0; i < 4; i++) {
             if (IsKeyPressed(teclas[i])) {
                 for (int j = 0; j < total_notas; j++) {
