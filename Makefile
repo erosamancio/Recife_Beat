@@ -1,3 +1,27 @@
-all:
-	gcc main.c -o jogo -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
-	./jogo
+TARGET = jogo
+CC = gcc
+SRC = main.c
+CFLAGS = -Wall -std=c99
+LDFLAGS = -lraylib
+UNAME_S := $(shell uname -s)
+
+# Linux
+ifeq ($(UNAME_S),Linux)
+	LDFLAGS += -lGL -lm -lpthread -ldl -lrt -lX11
+endif
+
+# macOS
+ifeq ($(UNAME_S),Darwin)
+	LDFLAGS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+endif
+
+all: build run
+
+build:
+	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LDFLAGS)
+
+run:
+	./$(TARGET)
+
+clean:
+	rm -f $(TARGET)
