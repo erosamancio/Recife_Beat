@@ -44,7 +44,7 @@ int main() {
 
     GerarFaseCompleta();
 
-    Music musica = LoadMusicStream("a_praieira.ogg");
+    Music musica = LoadMusicStream("audio/a_praieira.ogg");
 
     PlayMusicStream(musica);
 
