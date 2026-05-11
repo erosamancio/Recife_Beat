@@ -3,6 +3,7 @@
 
 #include <raylib.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 typedef struct nota {
     int tempo_ms;
@@ -93,6 +94,36 @@ void GerarFaseCompleta() {
 
         tempo_base += 6336;
     }
+}
+void salvar_mapa(const char *nomeArquivo) {
+    FILE *arquivo = fopen(nomeArquivo, "w");
+    if (arquivo == NULL) return;
+
+    Nota *atual = inicio;
+    while (atual != NULL) {
+        fprintf(arquivo, "%d,%d\n", atual->tempo_ms, atual->botao);
+        atual = atual->prox;
+    }
+    fclose(arquivo);
+}
+
+void carregar_mapa(const char *nomeArquivo) {
+    liberar_notas(); // Limpa a lista atual antes de carregar uma nova
+    
+    FILE *arquivo = fopen(nomeArquivo, "r");
+    if (arquivo == NULL) {
+        TraceLog(LOG_WARNING, "Arquivo de mapa nao encontrado. Iniciando vazio.");
+        return;
+    }
+
+    int tempo, botao;
+    // Lê o arquivo linha por linha (formato: tempo,botao)
+    while (fscanf(arquivo, "%d,%d", &tempo, &botao) != EOF) {
+        inserir_nota(tempo, botao);
+    }
+
+    fclose(arquivo);
+    TraceLog(LOG_INFO, "Mapa %s carregado com sucesso!", nomeArquivo);
 }
 
 #endif
