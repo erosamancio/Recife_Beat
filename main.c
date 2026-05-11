@@ -78,9 +78,9 @@ int main() {
             GetMusicTimePlayed(musica) * 1000.0f;
 
         // TOGGLE DO MODO EDITOR
-        if (IsKeyDown(KEY_LEFT_CONTROL) &&
+        if (((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_LEFT_SUPER)) &&
             IsKeyDown(KEY_LEFT_SHIFT) &&
-            IsKeyPressed(KEY_X)) {
+            IsKeyPressed(KEY_X))) {
 
             modoEditor = !modoEditor;
 
