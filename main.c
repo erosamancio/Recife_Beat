@@ -59,25 +59,24 @@ void resetar_notas() {
 // ==========================================
 // FUNÇÃO PRINCIPAL
 // ==========================================
-int main() {
-    // Configura a janela para iniciar em Tela Cheia
-    SetConfigFlags(FLAG_FULLSCREEN_MODE);
-    InitWindow(0, 0, "Recife Beat - A Praieira");
+int main(){
+    SetConfigFlags(FLAG_WINDOW_HIGHDPI);
+    InitWindow(800, 600, "Recife Beat");
+    int monitor = GetCurrentMonitor();
+    LARGURA_TELA = GetMonitorWidth(monitor);
+    ALTURA_TELA = GetMonitorHeight(monitor);
 
-    // Captura a resolução real
-    LARGURA_TELA = GetScreenWidth();
-    ALTURA_TELA = GetScreenHeight();
+    SetWindowSize(LARGURA_TELA, ALTURA_TELA);
+    ToggleFullscreen();
     Y_ALVO = ALTURA_TELA - 150; 
 
     InitAudioDevice();
 
-    // Carregamento de recursos gerais
     Texture2D mapaBase = LoadTexture("images/mapa_base.png");
     
     // ==========================================
     // CARREGAMENTO DA FONTE CUSTOMIZADA
     // ==========================================
-    // Usamos LoadFontEx para carregar a fonte já em tamanho grande (60) e evitar desfoque
     Font fonteTitulo = LoadFontEx("fonts/PermanentMarker-Regular.ttf", 60, NULL, 0);
 
     // ==========================================
@@ -239,12 +238,10 @@ int main() {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        if (estadoAtual == MENU_PRINCIPAL) {
-            // Desenhando o título com a fonte customizada
+        if(estadoAtual == MENU_PRINCIPAL){
             Vector2 tamanhoTitulo = MeasureTextEx(fonteTitulo, "RECIFE BEAT", 60, 2);
             DrawTextEx(fonteTitulo, "RECIFE BEAT", (Vector2){LARGURA_TELA / 2 - tamanhoTitulo.x / 2, ALTURA_TELA / 4}, 60, 2, WHITE);
 
-            // As opções do menu continuam com a fonte padrão (mas você pode mudar se quiser!)
             DrawText(opcaoMenu == 0 ? "> JOGAR <" : "JOGAR", LARGURA_TELA / 2 - 80, ALTURA_TELA / 2, 40, opcaoMenu == 0 ? YELLOW : GRAY);
             DrawText(opcaoMenu == 1 ? "> AJUSTES <" : "AJUSTES", LARGURA_TELA / 2 - 110, ALTURA_TELA / 2 + 70, 40, opcaoMenu == 1 ? YELLOW : GRAY);
             DrawText(opcaoMenu == 2 ? "> SAIR <" : "SAIR", LARGURA_TELA / 2 - 60, ALTURA_TELA / 2 + 140, 40, opcaoMenu == 2 ? YELLOW : GRAY);
@@ -269,7 +266,7 @@ int main() {
             Rectangle dest = { 0.0f, 0.0f, (float)LARGURA_TELA, (float)ALTURA_TELA };
             DrawTexturePro(mapaBase, source, dest, (Vector2){ 0, 0 }, 0.0f, WHITE);
 
-            // DESENHA A CAPIVARA ANIMADA
+            // DESENHA A CAPIVARA
             float escalaCapivara = 0.3f; 
             float alturaCapivara = framesCapivara[frameAtualCapivara].height * escalaCapivara;
             float posCapivaraX = deslocamentoX + 650; 
@@ -283,7 +280,7 @@ int main() {
                 WHITE
             );
 
-            for (int i = 0; i < 4; i++) {
+            for(int i = 0; i < 4; i++){
                 DrawRectangle(deslocamentoX + i * 150, 0, 100, ALTURA_TELA, ColorAlpha(LIGHTGRAY, 0.6f));
                 DrawCircleLines(deslocamentoX + 50 + i * 150, Y_ALVO, RAIO_NOTA + 2, BLACK);
                 
@@ -294,15 +291,15 @@ int main() {
             Nota *atual = inicio;
             float tempo_atual_ms = GetMusicTimePlayed(musica) * 1000.0f;
 
-            while (atual != NULL) {
-                if (atual->ativa) {
+            while(atual != NULL){
+                if(atual->ativa){
                     float y_pos = Y_ALVO - (atual->tempo_ms - tempo_atual_ms) * VELOCIDADE;
 
-                    if (y_pos > ALTURA_TELA + 50) {
+                    if(y_pos > ALTURA_TELA + 50) {
                         atual->ativa = false;
                     }
 
-                    if (y_pos > -50 && y_pos < ALTURA_TELA) {
+                    if(y_pos > -50 && y_pos < ALTURA_TELA){
                         Color corNota = (tempo_atual_ms > 180000) ? ORANGE : MAROON;
                         DrawCircle(deslocamentoX + 50 + atual->botao * 150, (int)y_pos, RAIO_NOTA, corNota);
                     }
@@ -313,7 +310,6 @@ int main() {
             DrawText(TextFormat("PONTOS: %06d", pontuacao), 30, 30, 30, DARKGRAY);
             DrawText(mensagem_feedback, LARGURA_TELA / 2 - MeasureText(mensagem_feedback, 40) / 2, 80, 40, GOLD);
             
-            // Título do jogo durante a gameplay com a fonte customizada
             Vector2 tamanhoGameplay = MeasureTextEx(fonteTitulo, "A PRAIEIRA - CHICO SCIENCE", 30, 2);
             DrawTextEx(fonteTitulo, "A PRAIEIRA - CHICO SCIENCE", (Vector2){LARGURA_TELA - tamanhoGameplay.x - 30, 30}, 30, 2, MAROON);
 
@@ -337,7 +333,7 @@ int main() {
         UnloadTexture(framesCapivara[i]);
     }
     UnloadTexture(mapaBase);
-    UnloadFont(fonteTitulo); // Limpa a fonte da memória
+    UnloadFont(fonteTitulo);
     
     liberar_notas();
     UnloadMusicStream(musica);
