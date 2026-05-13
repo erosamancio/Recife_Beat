@@ -74,6 +74,14 @@ const char* arquivosAudio[NUM_MUSICAS] = {
     "audio/voltei_recife.ogg"
 };
 
+const char* arquivosMapa[NUM_MUSICAS] = {
+    "mapa_praieira.txt",
+    "mapa_anunciacao.txt",
+    "mapa_frevo_mulher.txt",
+    "mapa_leao_do_norte.txt",
+    "mapa_voltei_recife.txt"
+};
+
 // ==========================================
 // FUNÇÃO PRINCIPAL
 // ==========================================
@@ -167,6 +175,7 @@ int main(){
                     liberar_notas(); 
                     UnloadMusicStream(musica);
                     musica = LoadMusicStream(arquivosAudio[opcaoMusica]);
+                    mapa_atual = arquivosMapa[opcaoMusica]; 
                     carregar_mapa(mapa_atual);
 
                     estadoAtual = TRANSICAO;
