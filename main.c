@@ -56,6 +56,24 @@ void resetar_notas() {
     }
 }
 
+#define NUM_MUSICAS 5
+
+const char* titulosMusicas[NUM_MUSICAS] = {
+    "A Praieira - Chico Science",
+    "Anunciacao - Alceu Valenca",
+    "Frevo Mulher - Amelinha",
+    "Leao do Norte - Lenine",
+    "Voltei Recife - Alceu Valenca"
+};
+
+const char* arquivosAudio[NUM_MUSICAS] = {
+    "audio/a_praieira.ogg",
+    "audio/anunciacao.ogg",
+    "audio/frevo_mulher.ogg",
+    "audio/leao_do_norte.ogg",
+    "audio/voltei_recife.ogg"
+};
+
 // ==========================================
 // FUNÇÃO PRINCIPAL
 // ==========================================
@@ -99,6 +117,7 @@ int main(){
 
     EstadoJogo estadoAtual = MENU_PRINCIPAL;
     int opcaoMenu = 0;
+    int opcaoMusica = 0;
     float volumeGeral = 1.0f;
     float alphaTransicao = 1.0f;
     bool deveFechar = false; 
@@ -137,7 +156,19 @@ int main(){
                 break;
 
             case MENU_MUSICAS:
-                if (IsKeyPressed(KEY_ENTER)) {
+                if(IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
+                    opcaoMusica = (opcaoMusica + 1) % NUM_MUSICAS;
+                }
+                if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
+                    opcaoMusica = (opcaoMusica - 1 + NUM_MUSICAS) % NUM_MUSICAS;
+                }
+
+                if(IsKeyPressed(KEY_ENTER)){
+                    liberar_notas(); 
+                    UnloadMusicStream(musica);
+                    musica = LoadMusicStream(arquivosAudio[opcaoMusica]);
+                    carregar_mapa(mapa_atual);
+
                     estadoAtual = TRANSICAO;
                     PlayMusicStream(musica);
                 }
@@ -248,9 +279,16 @@ int main(){
         }
         else if (estadoAtual == MENU_MUSICAS) {
             Vector2 tamanhoTitulo = MeasureTextEx(fonteTitulo, "SELECIONE A MUSICA", 50, 2);
-            DrawTextEx(fonteTitulo, "SELECIONE A MUSICA", (Vector2){LARGURA_TELA / 2 - tamanhoTitulo.x / 2, ALTURA_TELA / 4}, 50, 2, WHITE);
+            DrawTextEx(fonteTitulo, "SELECIONE A MUSICA", (Vector2){LARGURA_TELA / 2 - tamanhoTitulo.x / 2, ALTURA_TELA / 6}, 50, 2, WHITE);
 
-            DrawText("> A Praieira - Chico Science <", LARGURA_TELA / 2 - MeasureText("> A Praieira - Chico Science <", 40) / 2, ALTURA_TELA / 2, 40, YELLOW);
+            for(int i = 0; i < NUM_MUSICAS; i++){
+                Color corTexto = (i == opcaoMusica) ? YELLOW : GRAY;
+                const char* textoMusica = (i == opcaoMusica) ? TextFormat("> %s <", titulosMusicas[i]) : titulosMusicas[i];
+                
+                int larguraTexto = MeasureText(textoMusica, 40);
+                DrawText(textoMusica, LARGURA_TELA / 2 - larguraTexto / 2, ALTURA_TELA / 3 + (i * 60), 40, corTexto);
+            }
+
             DrawText("Pressione ESC para voltar", 30, ALTURA_TELA - 50, 20, GRAY);
         }
         else if (estadoAtual == MENU_AJUSTES) {
@@ -317,7 +355,7 @@ int main(){
                 DrawCircleLines(x_base_pista, Y_ALVO, RAIO_NOTA + 2, BLACK);
                 
                 const char* teclasStr[] = {"C", "V", "N", "M"};
-                DrawText(teclasStr[i], x_base_pista - 10, Y_ALVO - 15, 30, DARKGRAY);
+                DrawText(teclasStr[i], x_base_pista - 10, Y_ALVO - 15, 30, WHITE);
             }
 
             Nota *atual = inicio;
@@ -347,11 +385,11 @@ int main(){
                 atual = atual->prox;
             }
 
-            DrawText(TextFormat("PONTOS: %06d", pontuacao), 30, 30, 30, DARKGRAY);
+            DrawText(TextFormat("PONTOS: %06d", pontuacao), 30, 30, 30, WHITE);
             DrawText(mensagem_feedback, LARGURA_TELA / 2 - MeasureText(mensagem_feedback, 40) / 2, 80, 40, GOLD);
             
-            Vector2 tamanhoGameplay = MeasureTextEx(fonteTitulo, "A PRAIEIRA - CHICO SCIENCE", 30, 2);
-            DrawTextEx(fonteTitulo, "A PRAIEIRA - CHICO SCIENCE", (Vector2){LARGURA_TELA - tamanhoGameplay.x - 30, 30}, 30, 2, MAROON);
+            Vector2 tamanhoGameplay = MeasureTextEx(fonteTitulo, titulosMusicas[opcaoMusica], 30, 2);
+            DrawTextEx(fonteTitulo, titulosMusicas[opcaoMusica], (Vector2){LARGURA_TELA - tamanhoGameplay.x - 30, 30}, 30, 2, WHITE);
 
             if(modoEditor){
                 DrawRectangle(0, 0, LARGURA_TELA, 50, Fade(RED, 0.8f));
