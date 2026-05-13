@@ -1,18 +1,24 @@
 TARGET = jogo
 CC = gcc
-SRC = main.c
+SRC = main.c telas.c ranking.c musica_praieira.c
 CFLAGS = -Wall -std=c99
 LDFLAGS = -lraylib
-UNAME_S := $(shell uname -s)
 
-# Linux
-ifeq ($(UNAME_S),Linux)
-	LDFLAGS += -lGL -lm -lpthread -ldl -lrt -lX11
-endif
+ifeq ($(OS),Windows_NT)
+    TARGET = jogo.exe
+    LDFLAGS += -lgdi32 -lwinmm
+else
+    UNAME_S := $(shell uname -s)
 
-# macOS
-ifeq ($(UNAME_S),Darwin)
-	LDFLAGS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+    # Linux
+    ifeq ($(UNAME_S),Linux)
+        LDFLAGS += -lGL -lm -lpthread -ldl -lrt -lX11
+    endif
+
+    # macOS
+    ifeq ($(UNAME_S),Darwin)
+        LDFLAGS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+    endif
 endif
 
 all: build run
@@ -22,6 +28,5 @@ build:
 
 run:
 	./$(TARGET)
-
 clean:
 	rm -f $(TARGET)
