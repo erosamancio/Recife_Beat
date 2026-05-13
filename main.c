@@ -12,8 +12,17 @@ typedef enum {
     MENU_MUSICAS,
     MENU_AJUSTES,
     TRANSICAO,
-    JOGANDO
+    JOGANDO,
+    INSERIR_NOME
 } EstadoJogo;
+
+char nomeInput[12] = "\0"; 
+int contLetras = 0;
+
+typedef struct {
+    char nome[10];
+    int pontos;
+} Score;
 
 int LARGURA_TELA;
 int ALTURA_TELA;
@@ -82,12 +91,105 @@ const char* arquivosMapa[NUM_MUSICAS] = {
     "mapa_voltei_recife.txt"
 };
 
+#define MAX_SCORES 5
+
+const char* arquivosRanking[NUM_MUSICAS] = {
+    "ranking_praieira.txt",
+    "ranking_anunciacao.txt",
+    "ranking_frevo_mulher.txt",
+    "ranking_leao_do_norte.txt",
+    "ranking_voltei_recife.txt"
+};
+
+const char* ranking_atual = "ranking_praieira.txt";
+
+// ==========================================
+//   QUICKSORT 
+// ==========================================
+void trocar(Score* a, Score* b) {
+    Score temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+int particao(Score arr[], int baixo, int alto){
+    int pivo = arr[alto].pontos;
+    int i = (baixo - 1);
+
+    for(int j = baixo; j <= alto - 1; j++){
+        if(arr[j].pontos >= pivo){
+            i++;
+            trocar(&arr[i], &arr[j]);
+        }
+    }
+    trocar(&arr[i + 1], &arr[alto]);
+    return (i + 1);
+}
+
+void quicksort(Score arr[], int baixo, int alto){
+    if(baixo < alto){
+        int pi = particao(arr, baixo, alto);
+        quicksort(arr, baixo, pi - 1);
+        quicksort(arr, pi + 1, alto);
+    }
+}
+
+void salvar_score(const char* arquivo, const char* nome_jogador, int nova_pontuacao) {
+    if (nova_pontuacao == 0) return;
+
+    Score ranking[MAX_SCORES + 1];
+    int qtd = 0;
+    FILE *f = fopen(arquivo, "r");
+    if(f != NULL){
+        while(fscanf(f, "%s %d", ranking[qtd].nome, &ranking[qtd].pontos) != EOF){
+            qtd++;
+            if(qtd >= MAX_SCORES)break;
+        }
+        fclose(f);
+    }
+
+    TextCopy(ranking[qtd].nome, nome_jogador); 
+    ranking[qtd].pontos = nova_pontuacao;
+    qtd++;
+
+    quicksort(ranking, 0, qtd - 1);
+
+    f = fopen(arquivo, "w");
+    if(f != NULL){
+        int limite;
+        if(qtd > MAX_SCORES){
+            limite = MAX_SCORES;
+        }else{ 
+            limite = qtd;
+        }
+        for(int i = 0; i < limite; i++) {
+            fprintf(f, "%s %d\n", ranking[i].nome, ranking[i].pontos);
+        }
+        fclose(f);
+    }
+}
+
+Score rankingTela[MAX_SCORES];
+int qtdRankingTela = 0;
+void carregar_ranking_tela(const char* arquivo){
+    qtdRankingTela = 0;
+    FILE *f = fopen(arquivo, "r");
+    if(f != NULL){
+        while(fscanf(f, "%s %d", rankingTela[qtdRankingTela].nome, &rankingTela[qtdRankingTela].pontos) != EOF){
+            qtdRankingTela++;
+            if(qtdRankingTela >= MAX_SCORES) break;
+        }
+        fclose(f);
+    }
+}
+
 // ==========================================
 // FUNÇÃO PRINCIPAL
 // ==========================================
 int main(){
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
     InitWindow(800, 600, "Recife Beat");
+    SetExitKey(0);
     int monitor = GetCurrentMonitor();
     LARGURA_TELA = GetMonitorWidth(monitor);
     ALTURA_TELA = GetMonitorHeight(monitor);
@@ -150,8 +252,9 @@ int main(){
 
                 if (IsKeyPressed(KEY_ENTER)) {
                     if (opcaoMenu == 0) { 
-                        estadoAtual = MENU_MUSICAS; 
-                        opcaoMenu = 0;
+                        estadoAtual = MENU_MUSICAS;
+                        opcaoMusica = 0;
+                        carregar_ranking_tela(arquivosRanking[opcaoMusica]);
                     }
                     else if (opcaoMenu == 1) { 
                         estadoAtual = MENU_AJUSTES; 
@@ -166,9 +269,11 @@ int main(){
             case MENU_MUSICAS:
                 if(IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
                     opcaoMusica = (opcaoMusica + 1) % NUM_MUSICAS;
+                    carregar_ranking_tela(arquivosRanking[opcaoMusica]);
                 }
                 if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
                     opcaoMusica = (opcaoMusica - 1 + NUM_MUSICAS) % NUM_MUSICAS;
+                    carregar_ranking_tela(arquivosRanking[opcaoMusica]);
                 }
 
                 if(IsKeyPressed(KEY_ENTER)){
@@ -176,6 +281,7 @@ int main(){
                     UnloadMusicStream(musica);
                     musica = LoadMusicStream(arquivosAudio[opcaoMusica]);
                     mapa_atual = arquivosMapa[opcaoMusica]; 
+                    ranking_atual = arquivosRanking[opcaoMusica];
                     carregar_mapa(mapa_atual);
 
                     estadoAtual = TRANSICAO;
@@ -218,12 +324,19 @@ int main(){
                 float tempo_atual_ms = GetMusicTimePlayed(musica) * 1000.0f;
 
                 if (IsKeyPressed(KEY_ESCAPE)) {
-                    estadoAtual = MENU_PRINCIPAL;
-                    StopMusicStream(musica);
+                    StopMusicStream(musica); 
+                    if(!modoEditor && pontuacao > 0){
+                        estadoAtual = INSERIR_NOME;
+                        nomeInput[0] = '\0';
+                        contLetras = 0;
+                    }else{
+                        estadoAtual = MENU_PRINCIPAL;
+                        pontuacao = 0;
+                        TextCopy(mensagem_feedback, "");
+                        alphaTransicao = 1.0f;
+                        modoEditor = false;
+                    }
                     resetar_notas();
-                    pontuacao = 0;
-                    TextCopy(mensagem_feedback, "");
-                    alphaTransicao = 1.0f;
                 }
 
                 if (((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_LEFT_SUPER)) &&
@@ -270,6 +383,38 @@ int main(){
                     }
                 }
                 break;
+            case INSERIR_NOME:
+            {
+                int tecla = GetCharPressed();
+                while (tecla > 0) {
+                    if ((tecla >= 32) && (tecla <= 125) && (contLetras < 15)) {
+                        nomeInput[contLetras] = (char)tecla;
+                        nomeInput[contLetras + 1] = '\0';
+                        contLetras++;
+                    }
+                    tecla = GetCharPressed(); 
+                }
+
+                if (IsKeyPressed(KEY_BACKSPACE)) {
+                    contLetras--;
+                    if (contLetras < 0) contLetras = 0;
+                    nomeInput[contLetras] = '\0';
+                }
+
+                if (IsKeyPressed(KEY_ENTER) && contLetras > 0) {
+                    for (int i = 0; i < contLetras; i++) {
+                        if (nomeInput[i] == ' ') nomeInput[i] = '_';
+                    }
+
+                    salvar_score(ranking_atual, nomeInput, pontuacao); 
+                    
+                    estadoAtual = MENU_PRINCIPAL;
+                    pontuacao = 0;
+                    TextCopy(mensagem_feedback, "");
+                    alphaTransicao = 1.0f;
+                }
+            }
+            break;
         }
 
         // ==========================================
@@ -286,7 +431,7 @@ int main(){
             DrawText(opcaoMenu == 1 ? "> AJUSTES <" : "AJUSTES", LARGURA_TELA / 2 - 110, ALTURA_TELA / 2 + 70, 40, opcaoMenu == 1 ? YELLOW : GRAY);
             DrawText(opcaoMenu == 2 ? "> SAIR <" : "SAIR", LARGURA_TELA / 2 - 60, ALTURA_TELA / 2 + 140, 40, opcaoMenu == 2 ? YELLOW : GRAY);
         }
-        else if (estadoAtual == MENU_MUSICAS) {
+        else if(estadoAtual == MENU_MUSICAS){
             Vector2 tamanhoTitulo = MeasureTextEx(fonteTitulo, "SELECIONE A MUSICA", 50, 2);
             DrawTextEx(fonteTitulo, "SELECIONE A MUSICA", (Vector2){LARGURA_TELA / 2 - tamanhoTitulo.x / 2, ALTURA_TELA / 6}, 50, 2, WHITE);
 
@@ -295,7 +440,27 @@ int main(){
                 const char* textoMusica = (i == opcaoMusica) ? TextFormat("> %s <", titulosMusicas[i]) : titulosMusicas[i];
                 
                 int larguraTexto = MeasureText(textoMusica, 40);
-                DrawText(textoMusica, LARGURA_TELA / 2 - larguraTexto / 2, ALTURA_TELA / 3 + (i * 60), 40, corTexto);
+                DrawText(textoMusica, (LARGURA_TELA / 2) - larguraTexto / 2 - 200, ALTURA_TELA / 3 + (i * 60), 40, corTexto);
+            }
+            int posXRanking = LARGURA_TELA - 450; 
+            int posYRanking = ALTURA_TELA / 3;
+            
+            DrawText("TOP 5 - RANKING", posXRanking, posYRanking - 50, 30, GOLD);
+
+            if(qtdRankingTela == 0){
+                DrawText("Sem pontuacoes ainda...", posXRanking, posYRanking, 20, LIGHTGRAY);
+                DrawText("Jogue e seja o primeiro!", posXRanking, posYRanking + 30, 20, DARKGRAY);
+            }else{
+                for(int i = 0; i < qtdRankingTela; i++){
+                    const char* linhaRank = TextFormat("%d. %s - %06d", i + 1, rankingTela[i].nome, rankingTela[i].pontos);
+                    
+                    Color corRank = WHITE;
+                    if (i == 0) corRank = GOLD;
+                    else if (i == 1) corRank = LIGHTGRAY;
+                    else if (i == 2) corRank = ORANGE;
+
+                    DrawText(linhaRank, posXRanking, posYRanking + (i * 35), 25, corRank);
+                }
             }
 
             DrawText("Pressione ESC para voltar", 30, ALTURA_TELA - 50, 20, GRAY);
@@ -408,6 +573,23 @@ int main(){
             if(estadoAtual == TRANSICAO){
                 DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, Fade(BLACK, alphaTransicao));
             }
+        }else if (estadoAtual == INSERIR_NOME){
+            Vector2 tamanhoTitulo = MeasureTextEx(fonteTitulo, "FIM DE JOGO", 60, 2);
+            DrawTextEx(fonteTitulo, "FIM DE JOGO", (Vector2){LARGURA_TELA / 2 - tamanhoTitulo.x / 2, ALTURA_TELA / 4}, 60, 2, WHITE);
+
+            DrawText(TextFormat("PONTUACAO: %d", pontuacao), LARGURA_TELA / 2 - MeasureText(TextFormat("PONTUACAO: %d", pontuacao), 40) / 2, ALTURA_TELA / 2 - 60, 40, GOLD);
+            DrawText("DIGITE SEU NOME:", LARGURA_TELA / 2 - MeasureText("DIGITE SEU NOME:", 30) / 2, ALTURA_TELA / 2 + 20, 30, GRAY);
+            
+            DrawRectangle(LARGURA_TELA / 2 - 200, ALTURA_TELA / 2 + 70, 400, 50, LIGHTGRAY);
+            DrawRectangleLines(LARGURA_TELA / 2 - 200, ALTURA_TELA / 2 + 70, 400, 50, DARKGRAY);
+            
+            DrawText(nomeInput, LARGURA_TELA / 2 - MeasureText(nomeInput, 30) / 2, ALTURA_TELA / 2 + 80, 30, BLACK);
+
+            if (((int)(GetTime() * 2)) % 2 == 0 && contLetras < 15) {
+                DrawText("_", LARGURA_TELA / 2 + MeasureText(nomeInput, 30) / 2 + 5, ALTURA_TELA / 2 + 80, 30, MAROON);
+            }
+
+            DrawText("Pressione ENTER para salvar", LARGURA_TELA / 2 - MeasureText("Pressione ENTER para salvar", 20) / 2, ALTURA_TELA - 100, 20, DARKGRAY);
         }
 
         EndDrawing();
