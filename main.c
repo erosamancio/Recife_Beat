@@ -260,16 +260,16 @@ int main(){
             DrawText(TextFormat("Volume Geral: < %0.0f%% >", volumeGeral * 100), LARGURA_TELA / 2 - 180, ALTURA_TELA / 2, 40, YELLOW);
             DrawText("Pressione ESC para voltar", 30, ALTURA_TELA - 50, 20, GRAY);
         }
-        else if (estadoAtual == JOGANDO || estadoAtual == TRANSICAO) {
+        else if (estadoAtual == JOGANDO || estadoAtual == TRANSICAO){
             
-            Rectangle source = { 0.0f, 0.0f, (float)mapaBase.width, (float)mapaBase.height };
-            Rectangle dest = { 0.0f, 0.0f, (float)LARGURA_TELA, (float)ALTURA_TELA };
+            Rectangle source = {0.0f, 0.0f, (float)mapaBase.width, (float)mapaBase.height};
+            Rectangle dest = {0.0f, 0.0f, (float)LARGURA_TELA, (float)ALTURA_TELA};
             DrawTexturePro(mapaBase, source, dest, (Vector2){ 0, 0 }, 0.0f, WHITE);
 
             // DESENHA A CAPIVARA
             float escalaCapivara = 0.3f; 
             float alturaCapivara = framesCapivara[frameAtualCapivara].height * escalaCapivara;
-            float posCapivaraX = deslocamentoX + 650; 
+            float posCapivaraX = deslocamentoX + 550; 
             float posCapivaraY = (ALTURA_TELA / 2) - (alturaCapivara / 2);
 
             DrawTextureEx(
@@ -280,28 +280,68 @@ int main(){
                 WHITE
             );
 
+            float y_horizonte = ALTURA_TELA / 2.2f;
+            float centro_pistas = deslocamentoX + 300.0f;
+            float progresso_tela_toda = (ALTURA_TELA - y_horizonte) / (Y_ALVO - y_horizonte);
+            float escala_tela_toda = 0.2f + (0.8f * progresso_tela_toda);
+
+            Color corFundoPista = ColorAlpha(BLACK, 0.6f); // 60% de opacidade
             for(int i = 0; i < 4; i++){
-                DrawRectangle(deslocamentoX + i * 150, 0, 100, ALTURA_TELA, ColorAlpha(LIGHTGRAY, 0.6f));
-                DrawCircleLines(deslocamentoX + 50 + i * 150, Y_ALVO, RAIO_NOTA + 2, BLACK);
+                float x_base_esq = deslocamentoX + i * 150;
+                float x_topo_esq = centro_pistas + (x_base_esq - centro_pistas) * 0.2f;
+                float x_fim_esq = centro_pistas + (x_base_esq - centro_pistas) * escala_tela_toda;
+
+                float x_base_dir = deslocamentoX + (i + 1) * 150;
+                float x_topo_dir = centro_pistas + (x_base_dir - centro_pistas) * 0.2f;
+                float x_fim_dir = centro_pistas + (x_base_dir - centro_pistas) * escala_tela_toda;
+
+                Vector2 topoEsq = {x_topo_esq, y_horizonte};
+                Vector2 baseEsq = {x_fim_esq, ALTURA_TELA};
+                Vector2 baseDir = {x_fim_dir, ALTURA_TELA};
+                Vector2 topoDir = {x_topo_dir, y_horizonte};
+
+                DrawTriangle(topoEsq, baseEsq, baseDir, corFundoPista);
+                DrawTriangle(topoEsq, baseDir, topoDir, corFundoPista);
+            }
+
+            for(int i = 0; i <= 4; i++){
+                float x_base_linha = deslocamentoX + i * 150;
+                float x_topo_linha = centro_pistas + (x_base_linha - centro_pistas) * 0.2f; 
+                float x_fim_linha = centro_pistas + (x_base_linha - centro_pistas) * escala_tela_toda;
+                
+                DrawLineEx((Vector2){x_topo_linha, y_horizonte}, (Vector2){x_fim_linha, ALTURA_TELA}, 4.0f, ColorAlpha(LIGHTGRAY, 0.5f));
+            }
+
+            for(int i = 0; i < 4; i++){
+                float x_base_pista = deslocamentoX + 75 + i * 150;
+                DrawCircleLines(x_base_pista, Y_ALVO, RAIO_NOTA + 2, BLACK);
                 
                 const char* teclasStr[] = {"C", "V", "N", "M"};
-                DrawText(teclasStr[i], deslocamentoX + 40 + i * 150, Y_ALVO - 15, 30, DARKGRAY);
+                DrawText(teclasStr[i], x_base_pista - 10, Y_ALVO - 15, 30, DARKGRAY);
             }
 
             Nota *atual = inicio;
             float tempo_atual_ms = GetMusicTimePlayed(musica) * 1000.0f;
 
-            while(atual != NULL){
-                if(atual->ativa){
+            while(atual != NULL) {
+                if(atual->ativa) {
                     float y_pos = Y_ALVO - (atual->tempo_ms - tempo_atual_ms) * VELOCIDADE;
-
-                    if(y_pos > ALTURA_TELA + 50) {
+                    if(y_pos > ALTURA_TELA + 50){
                         atual->ativa = false;
                     }
 
-                    if(y_pos > -50 && y_pos < ALTURA_TELA){
+                    if(y_pos > y_horizonte && y_pos < ALTURA_TELA){
+                        float progresso = (y_pos - y_horizonte) / (Y_ALVO - y_horizonte);
+                        if(progresso < 0.0f)
+                         progresso = 0.0f;
+                        float escala_perspectiva = 0.2f + (0.8f * progresso);
+                        float x_base_nota = deslocamentoX + 75 + atual->botao * 150;
+                        
+                        float x_atual = centro_pistas + (x_base_nota - centro_pistas) * escala_perspectiva;
+                        float raio_atual = RAIO_NOTA * escala_perspectiva;
+
                         Color corNota = (tempo_atual_ms > 180000) ? ORANGE : MAROON;
-                        DrawCircle(deslocamentoX + 50 + atual->botao * 150, (int)y_pos, RAIO_NOTA, corNota);
+                        DrawCircle((int)x_atual, (int)y_pos, raio_atual, corNota);
                     }
                 }
                 atual = atual->prox;
@@ -313,12 +353,12 @@ int main(){
             Vector2 tamanhoGameplay = MeasureTextEx(fonteTitulo, "A PRAIEIRA - CHICO SCIENCE", 30, 2);
             DrawTextEx(fonteTitulo, "A PRAIEIRA - CHICO SCIENCE", (Vector2){LARGURA_TELA - tamanhoGameplay.x - 30, 30}, 30, 2, MAROON);
 
-            if (modoEditor) {
+            if(modoEditor){
                 DrawRectangle(0, 0, LARGURA_TELA, 50, Fade(RED, 0.8f));
                 DrawText("MODO EDITOR | TOQUE PARA GRAVAR | S: SALVAR | DELETE: LIMPAR", 30, 15, 20, WHITE);
             }
 
-            if (estadoAtual == TRANSICAO) {
+            if(estadoAtual == TRANSICAO){
                 DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, Fade(BLACK, alphaTransicao));
             }
         }
