@@ -1,35 +1,27 @@
+TARGET = jogo
 CC = gcc
-
-CFLAGS = -Wall -Wextra -std=c99
-
-SRC = main.c mapa.c ranking.c
-
-OUT = recife_beat
-
+SRC = main.c
+CFLAGS = -Wall -std=c99
+LDFLAGS = -lraylib
 UNAME_S := $(shell uname -s)
 
+# Linux
 ifeq ($(UNAME_S),Linux)
-
-LIBS = -lraylib -lm -ldl -lpthread
-
+	LDFLAGS += -lGL -lm -lpthread -ldl -lrt -lX11
 endif
 
+# macOS
 ifeq ($(UNAME_S),Darwin)
-
-LIBS = -lraylib \
-	   -framework OpenGL \
-	   -framework Cocoa \
-	   -framework IOKit \
-	   -framework CoreAudio \
-	   -framework CoreVideo
-
+	LDFLAGS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
 endif
 
-all:
-	$(CC) $(CFLAGS) $(SRC) -o $(OUT) $(LIBS)
+all: build run
 
-run: all
-	./$(OUT)
+build:
+	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LDFLAGS)
+
+run:
+	./$(TARGET)
 
 clean:
-	rm -f $(OUT)
+	rm -f $(TARGET)
