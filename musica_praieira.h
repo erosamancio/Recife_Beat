@@ -108,7 +108,7 @@ void salvar_mapa(const char *nomeArquivo) {
 }
 
 void carregar_mapa(const char *nomeArquivo) {
-    liberar_notas(); // Limpa a lista atual antes de carregar uma nova
+    liberar_notas();
     
     FILE *arquivo = fopen(nomeArquivo, "r");
     if (arquivo == NULL) {
@@ -117,7 +117,7 @@ void carregar_mapa(const char *nomeArquivo) {
     }
 
     int tempo, botao;
-    // Lê o arquivo linha por linha (formato: tempo,botao)
+
     while (fscanf(arquivo, "%d,%d", &tempo, &botao) != EOF) {
         inserir_nota(tempo, botao);
     }

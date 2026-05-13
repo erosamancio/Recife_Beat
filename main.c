@@ -4,9 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-// ==========================================
-// CONFIGURAÇÕES GERAIS E ESTADOS
-// ==========================================
+
 typedef enum {
     MENU_PRINCIPAL,
     MENU_MUSICAS,
@@ -35,9 +33,7 @@ char mensagem_feedback[20] = "";
 bool modoEditor = false;
 const char* mapa_atual = "mapa_praieira.txt";
 
-// ==========================================
-// FUNÇÕES AUXILIARES
-// ==========================================
+
 int verificar_pontuacao(int y_bola) {
     int distancia = abs(y_bola - Y_ALVO);
     float sobreposicao = 1.0f - ((float)distancia / (RAIO_NOTA * 2));
@@ -103,9 +99,7 @@ const char* arquivosRanking[NUM_MUSICAS] = {
 
 const char* ranking_atual = "ranking_praieira.txt";
 
-// ==========================================
-//   QUICKSORT 
-// ==========================================
+
 void trocar(Score* a, Score* b) {
     Score temp = *a;
     *a = *b;
@@ -183,9 +177,7 @@ void carregar_ranking_tela(const char* arquivo){
     }
 }
 
-// ==========================================
-// FUNÇÃO PRINCIPAL
-// ==========================================
+
 int main(){
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
     InitWindow(800, 600, "Recife Beat");
@@ -202,14 +194,9 @@ int main(){
 
     Texture2D mapaBase = LoadTexture("images/mapa_base.png");
     
-    // ==========================================
-    // CARREGAMENTO DA FONTE CUSTOMIZADA
-    // ==========================================
     Font fonteTitulo = LoadFontEx("fonts/PermanentMarker-Regular.ttf", 60, NULL, 0);
 
-    // ==========================================
-    // CARREGAMENTO DA ANIMAÇÃO DA CAPIVARA
-    // ==========================================
+
     Texture2D framesCapivara[4];
     framesCapivara[0] = LoadTexture("images/capivara_base1.png");
     framesCapivara[1] = LoadTexture("images/capivara_base2.png");
@@ -218,6 +205,17 @@ int main(){
     
     int frameAtualCapivara = 0;
     float timerAnimacaoCapivara = 0.0f;
+
+    Texture2D framesMenuTitulo[6];
+    framesMenuTitulo[0] = LoadTexture("images/menu_titulo1.png");
+    framesMenuTitulo[1] = LoadTexture("images/menu_titulo2.png");
+    framesMenuTitulo[2] = LoadTexture("images/menu_titulo3.png");
+    framesMenuTitulo[3] = LoadTexture("images/menu_titulo4.png");
+    framesMenuTitulo[4] = LoadTexture("images/menu_titulo5.png");
+    framesMenuTitulo[5] = LoadTexture("images/menu_titulo6.png");
+    
+    int frameAtualMenuTitulo = 0;
+    float timerAnimacaoMenuTitulo = 0.0f;
     // ==========================================
 
     carregar_mapa(mapa_atual);
@@ -238,9 +236,16 @@ int main(){
 
     while (!WindowShouldClose() && !deveFechar) {
 
-        // ==========================================
-        // LÓGICA DE ATUALIZAÇÃO (UPDATE)
-        // ==========================================
+
+        if (estadoAtual == MENU_PRINCIPAL) {
+            timerAnimacaoMenuTitulo += GetFrameTime();
+            if (timerAnimacaoMenuTitulo >= 0.25f) { 
+                timerAnimacaoMenuTitulo -= 0.25f;
+                frameAtualMenuTitulo = (frameAtualMenuTitulo + 1) % 6;
+            }
+        }
+
+
         switch (estadoAtual) {
             case MENU_PRINCIPAL:
                 if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) {
@@ -417,19 +422,48 @@ int main(){
             break;
         }
 
-        // ==========================================
-        // LÓGICA DE DESENHO (DRAW)
-        // ==========================================
+
         BeginDrawing();
         ClearBackground(BLACK);
 
         if(estadoAtual == MENU_PRINCIPAL){
-            Vector2 tamanhoTitulo = MeasureTextEx(fonteTitulo, "RECIFE BEAT", 60, 2);
-            DrawTextEx(fonteTitulo, "RECIFE BEAT", (Vector2){LARGURA_TELA / 2 - tamanhoTitulo.x / 2, ALTURA_TELA / 4}, 60, 2, WHITE);
 
-            DrawText(opcaoMenu == 0 ? "> JOGAR <" : "JOGAR", LARGURA_TELA / 2 - 80, ALTURA_TELA / 2, 40, opcaoMenu == 0 ? YELLOW : GRAY);
-            DrawText(opcaoMenu == 1 ? "> AJUSTES <" : "AJUSTES", LARGURA_TELA / 2 - 110, ALTURA_TELA / 2 + 70, 40, opcaoMenu == 1 ? YELLOW : GRAY);
-            DrawText(opcaoMenu == 2 ? "> SAIR <" : "SAIR", LARGURA_TELA / 2 - 60, ALTURA_TELA / 2 + 140, 40, opcaoMenu == 2 ? YELLOW : GRAY);
+            Rectangle source = {0.0f, 0.0f, (float)framesMenuTitulo[frameAtualMenuTitulo].width, (float)framesMenuTitulo[frameAtualMenuTitulo].height};
+            Rectangle dest = {0.0f, 0.0f, (float)LARGURA_TELA, (float)ALTURA_TELA};
+            DrawTexturePro(framesMenuTitulo[frameAtualMenuTitulo], source, dest, (Vector2){0, 0}, 0.0f, WHITE);
+
+            
+            int posXOpcoes = LARGURA_TELA - 400; 
+            const char* textosOpcoes[] = {"JOGAR", "AJUSTES", "SAIR"};
+            
+            for(int i = 0; i < 3; i++) {
+                Color corTexto = GRAY;
+                float tamanhoFonteOpcao = 40.0f; 
+                float posYOpcao = (ALTURA_TELA / 2) + (i * 70); 
+
+                if(i == opcaoMenu) {
+                    corTexto = BLACK; 
+
+                    Vector2 tamanhoTexto = MeasureTextEx(fonteTitulo, textosOpcoes[i], tamanhoFonteOpcao, 2);
+                    
+                    Rectangle recFundoLaranja = {
+                        (float)posXOpcoes - 20, 
+                        posYOpcao - 5,  
+                        tamanhoTexto.x + 40, 
+                        tamanhoFonteOpcao + 10 
+                    };
+                    DrawRectangleRounded(recFundoLaranja, 0.5f, 5, ORANGE);
+                }
+
+                DrawTextEx(
+                    fonteTitulo, 
+                    textosOpcoes[i], 
+                    (Vector2){ (float)posXOpcoes, posYOpcao }, 
+                    tamanhoFonteOpcao, 
+                    2, 
+                    corTexto
+                );
+            }
         }
         else if(estadoAtual == MENU_MUSICAS){
             Vector2 tamanhoTitulo = MeasureTextEx(fonteTitulo, "SELECIONE A MUSICA", 50, 2);
@@ -478,7 +512,7 @@ int main(){
             Rectangle dest = {0.0f, 0.0f, (float)LARGURA_TELA, (float)ALTURA_TELA};
             DrawTexturePro(mapaBase, source, dest, (Vector2){ 0, 0 }, 0.0f, WHITE);
 
-            // DESENHA A CAPIVARA
+
             float escalaCapivara = 0.3f; 
             float alturaCapivara = framesCapivara[frameAtualCapivara].height * escalaCapivara;
             float posCapivaraX = deslocamentoX + 550; 
@@ -497,7 +531,7 @@ int main(){
             float progresso_tela_toda = (ALTURA_TELA - y_horizonte) / (Y_ALVO - y_horizonte);
             float escala_tela_toda = 0.2f + (0.8f * progresso_tela_toda);
 
-            Color corFundoPista = ColorAlpha(BLACK, 0.6f); // 60% de opacidade
+            Color corFundoPista = ColorAlpha(BLACK, 0.6f); 
             for(int i = 0; i < 4; i++){
                 float x_base_esq = deslocamentoX + i * 150;
                 float x_topo_esq = centro_pistas + (x_base_esq - centro_pistas) * 0.2f;
@@ -595,12 +629,14 @@ int main(){
         EndDrawing();
     }
 
-    // ==========================================
-    // LIBERAÇÃO DE RECURSOS
-    // ==========================================
     for (int i = 0; i < 4; i++) {
         UnloadTexture(framesCapivara[i]);
     }
+
+    for (int i = 0; i < 6; i++) {
+        UnloadTexture(framesMenuTitulo[i]);
+    }
+
     UnloadTexture(mapaBase);
     UnloadFont(fonteTitulo);
     
