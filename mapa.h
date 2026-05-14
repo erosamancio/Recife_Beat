@@ -1,5 +1,5 @@
-#ifndef MUSICA_PRAIEIRA_H
-#define MUSICA_PRAIEIRA_H
+#ifndef MAPA_H
+#define MAPA_H
 
 #include <raylib.h>
 #include <stdlib.h>
