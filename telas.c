@@ -25,6 +25,13 @@ const char* rankingsRef[NUM_MUSICAS] = {
     "rankings/ranking_leao_do_norte.txt", "rankings/ranking_voltei_recife.txt"
 };
 
+static Texture2D texBom = {0};
+static Texture2D texMuitoBom = {0};
+static Texture2D texPerfeito = {0};
+static bool texturasCarregadas = false;
+static float feedbackTimer = 0.0f;
+static int tipoFeedback = 0; 
+
 void InitGameContext(GameContext *ctx) {
     ctx->largura = GetScreenWidth();
     ctx->altura = GetScreenHeight();
@@ -48,6 +55,13 @@ void InitGameContext(GameContext *ctx) {
     ctx->frameMenu = 0; ctx->timerMenu = 0.0f;
     
     ctx->musicaAtual = (Music){ 0 };
+
+    if (!texturasCarregadas) {
+        texBom = LoadTexture("images/mensagens/bom.png");
+        texMuitoBom = LoadTexture("images/mensagens/muito_bom.png");
+        texPerfeito = LoadTexture("images/mensagens/perfeito.png");
+        texturasCarregadas = true;
+    }
 }
 
 void UpdateMenuPrincipal(GameContext *ctx) {
@@ -87,8 +101,6 @@ void UpdateMenuMusicas(GameContext *ctx) {
         }
         
         ctx->musicaAtual = LoadMusicStream(audiosRef[ctx->opcaoMusica]);
-        
-        // Desativa o loop infinito padrao da Raylib
         ctx->musicaAtual.looping = false;
         
         ctx->mapaAtualCaminho = mapasRef[ctx->opcaoMusica]; 
@@ -125,13 +137,16 @@ void UpdateJogando(GameContext *ctx) {
     float tempo_ms = GetMusicTimePlayed(ctx->musicaAtual) * 1000.0f;
     float duracao_total = GetMusicTimeLength(ctx->musicaAtual) * 1000.0f;
 
+    if (feedbackTimer > 0.0f) {
+        feedbackTimer -= GetFrameTime();
+    }
+
     ctx->timerCapivara += GetFrameTime();
     if (ctx->timerCapivara >= 0.25f) {
         ctx->timerCapivara = 0.0f;
         ctx->frameCapivara = (ctx->frameCapivara + 1) % 4;
     }
     
-    // SISTEMA DE FIM DE JOGO (Encerra quando a musica acaba)
     if (duracao_total > 0 && tempo_ms >= duracao_total - 50.0f) {
         StopMusicStream(ctx->musicaAtual);
         if (!ctx->modoEditor && ctx->pontuacao > 0) {
@@ -162,6 +177,7 @@ void UpdateJogando(GameContext *ctx) {
         PlayMusicStream(ctx->musicaAtual);
         resetar_notas();
         TextCopy(ctx->mensagemFeedback, "");
+        feedbackTimer = 0.0f;
     }
 
     if (ctx->modoEditor) {
@@ -183,27 +199,32 @@ void UpdateJogando(GameContext *ctx) {
                 while (at != NULL) {
                     if (at->ativa && at->botao == i) {
                         
-                        /* ==============================================================
-                           SISTEMA DE VELOCIDADE DINAMICA (COLISAO)
-                           ============================================================== */
-                        float vel_nota = 0.42f; // Velocidade base (Normal)
+                        float vel_nota = 0.42f; 
                         if (duracao_total > 0) {
-                            if (at->tempo_ms < duracao_total * 0.25f) {
-                                vel_nota = 0.32f; // Inicio: 0% a 25% (Mais devagar)
-                            } else if (at->tempo_ms < duracao_total * 0.80f) {
-                                vel_nota = 0.42f; // Meio: 25% a 80% (Normal)
-                            } else {
-                                vel_nota = 0.55f; // Final: 80% a 100% (Mais rapido)
-                            }
+                            if (at->tempo_ms < duracao_total * 0.25f) vel_nota = 0.32f; 
+                            else if (at->tempo_ms < duracao_total * 0.80f) vel_nota = 0.42f; 
+                            else vel_nota = 0.55f; 
                         }
                         
                         float y = ctx->yAlvo - (at->tempo_ms - tempo_ms) * vel_nota;
-                        /* ============================================================== */
+                        float dist = fabsf(y - ctx->yAlvo);
 
-                        if (fabsf(y - ctx->yAlvo) < RAIO_NOTA * 2) {
-                            ctx->pontuacao += 100;
+                        if (dist < RAIO_NOTA * 2) {
+                            float precisao = (1.0f - (dist / (RAIO_NOTA * 2.0f))) * 100.0f;
+                            
+                            if (precisao >= 80.0f) {
+                                ctx->pontuacao += 100;
+                                tipoFeedback = 3; 
+                            } else if (precisao >= 30.0f) {
+                                ctx->pontuacao += 75;
+                                tipoFeedback = 2; 
+                            } else {
+                                ctx->pontuacao += 50;
+                                tipoFeedback = 1; 
+                            }
+                            
+                            feedbackTimer = 0.5f; 
                             at->ativa = false;
-                            TextCopy(ctx->mensagemFeedback, "ACERTOU!");
                             break;
                         }
                     }
@@ -330,23 +351,14 @@ void DrawJogando(GameContext *ctx) {
     Nota *at = inicio;
     while(at != NULL) {
         if(at->ativa) {
-            
-            /* ==============================================================
-               SISTEMA DE VELOCIDADE DINAMICA (DESENHO NA TELA)
-               ============================================================== */
-            float vel_nota = 0.42f; // Velocidade base (Normal)
+            float vel_nota = 0.42f; 
             if (duracao_total > 0) {
-                if (at->tempo_ms < duracao_total * 0.25f) {
-                    vel_nota = 0.32f; // Inicio: 0% a 25% (Mais devagar)
-                } else if (at->tempo_ms < duracao_total * 0.80f) {
-                    vel_nota = 0.42f; // Meio: 25% a 80% (Normal)
-                } else {
-                    vel_nota = 0.55f; // Final: 80% a 100% (Mais rapido)
-                }
+                if (at->tempo_ms < duracao_total * 0.25f) vel_nota = 0.32f; 
+                else if (at->tempo_ms < duracao_total * 0.80f) vel_nota = 0.42f; 
+                else vel_nota = 0.55f; 
             }
             
             float y = ctx->yAlvo - (at->tempo_ms - tempo) * vel_nota;
-            /* ============================================================== */
             
             if(y > ctx->altura + 50){
                 at->ativa = false;
@@ -361,7 +373,22 @@ void DrawJogando(GameContext *ctx) {
     }
 
     DrawText(TextFormat("PONTOS: %06d", ctx->pontuacao), 30, 30, 30, DARKGRAY);
-    DrawText(ctx->mensagemFeedback, ctx->largura / 2 - MeasureText(ctx->mensagemFeedback, 40) / 2, 80, 40, GOLD);
+    
+    if (ctx->modoEditor) {
+        DrawText(ctx->mensagemFeedback, ctx->largura / 2 - MeasureText(ctx->mensagemFeedback, 40) / 2, 80, 40, GOLD);
+    } else {
+        if (feedbackTimer > 0.0f) {
+            Texture2D texDesenhar = texBom;
+            if (tipoFeedback == 2) texDesenhar = texMuitoBom;
+            else if (tipoFeedback == 3) texDesenhar = texPerfeito;
+            
+            float escalaTex = 380.0f / (float)texDesenhar.height;
+            float drawWidth = texDesenhar.width * escalaTex;
+            
+            Vector2 pos = { (float)ctx->largura / 2.0f - drawWidth / 2.0f, 80.0f };
+            DrawTextureEx(texDesenhar, pos, 0.0f, escalaTex, WHITE);
+        }
+    }
     
     Vector2 tamGameplay = MeasureTextEx(ctx->fonteTitulo, titulosMusicasRef[ctx->opcaoMusica], 30, 2);
     DrawTextEx(ctx->fonteTitulo, titulosMusicasRef[ctx->opcaoMusica], (Vector2){ctx->largura - tamGameplay.x - 30, 30}, 30, 2, MAROON);
@@ -403,5 +430,12 @@ void UnloadGameResources(GameContext *ctx) {
     UnloadFont(ctx->fonteTitulo);
     if (IsMusicValid(ctx->musicaAtual)) {
         UnloadMusicStream(ctx->musicaAtual);
+    }
+    
+    if (texturasCarregadas) {
+        UnloadTexture(texBom);
+        UnloadTexture(texMuitoBom);
+        UnloadTexture(texPerfeito);
+        texturasCarregadas = false;
     }
 }
