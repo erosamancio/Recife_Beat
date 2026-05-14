@@ -26,8 +26,6 @@ const char* rankingsRef[NUM_MUSICAS] = {
     "ranking_leao_do_norte.txt", "ranking_voltei_recife.txt"
 };
 
-
-
 void InitGameContext(GameContext *ctx) {
     ctx->largura = GetScreenWidth();
     ctx->altura = GetScreenHeight();
@@ -49,9 +47,9 @@ void InitGameContext(GameContext *ctx) {
 
     ctx->frameCapivara = 0; ctx->timerCapivara = 0.0f;
     ctx->frameMenu = 0; ctx->timerMenu = 0.0f;
+    
+    ctx->musicaAtual = (Music){ 0 };
 }
-
-
 
 void UpdateMenuPrincipal(GameContext *ctx) {
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) ctx->opcaoMenu = (ctx->opcaoMenu + 1) % 3;
@@ -65,7 +63,6 @@ void UpdateMenuPrincipal(GameContext *ctx) {
         else if (ctx->opcaoMenu == 1) ctx->estadoAtual = MENU_AJUSTES;
         else if (ctx->opcaoMenu == 2) ctx->deveFechar = true;
     }
-
 
     ctx->timerMenu += GetFrameTime();
     if (ctx->timerMenu >= 0.25f) {
@@ -85,7 +82,11 @@ void UpdateMenuMusicas(GameContext *ctx) {
     }
     if (IsKeyPressed(KEY_ENTER)) {
         liberar_notas(); 
-        UnloadMusicStream(ctx->musicaAtual);
+        
+        if (IsMusicValid(ctx->musicaAtual)) {
+            UnloadMusicStream(ctx->musicaAtual);
+        }
+        
         ctx->musicaAtual = LoadMusicStream(audiosRef[ctx->opcaoMusica]);
         ctx->mapaAtualCaminho = mapasRef[ctx->opcaoMusica]; 
         ctx->rankingAtualCaminho = rankingsRef[ctx->opcaoMusica];
@@ -109,7 +110,6 @@ void UpdateTransicao(GameContext *ctx) {
     ctx->alphaTransicao -= 0.5f * GetFrameTime();
     if (ctx->alphaTransicao <= 0.0f) ctx->estadoAtual = JOGANDO;
     
-
     ctx->timerCapivara += GetFrameTime();
     if (ctx->timerCapivara >= 0.25f) {
         ctx->timerCapivara = 0.0f;
@@ -207,14 +207,10 @@ void UpdateInserirNome(GameContext *ctx) {
     }
 }
 
-
-
 void DrawMenuPrincipal(GameContext *ctx) {
-
     Rectangle src = {0, 0, (float)ctx->framesMenuTitulo[ctx->frameMenu].width, (float)ctx->framesMenuTitulo[ctx->frameMenu].height};
     Rectangle dst = {0, 0, (float)ctx->largura, (float)ctx->altura};
     DrawTexturePro(ctx->framesMenuTitulo[ctx->frameMenu], src, dst, (Vector2){0,0}, 0, WHITE);
-
 
     int posX = ctx->largura - 400;
     const char* opts[] = {"JOGAR", "AJUSTES", "SAIR"};
@@ -234,7 +230,6 @@ void DrawMenuPrincipal(GameContext *ctx) {
 }
 
 void DrawMenuMusicas(GameContext *ctx) {
-
     Vector2 tamTitulo = MeasureTextEx(ctx->fonteTitulo, "SELECIONE A MUSICA", 50, 2);
     DrawTextEx(ctx->fonteTitulo, "SELECIONE A MUSICA", (Vector2){ctx->largura / 2 - tamTitulo.x / 2, ctx->altura / 6}, 50, 2, WHITE);
 
@@ -266,7 +261,6 @@ void DrawMenuMusicas(GameContext *ctx) {
         }
     }
 
-
     DrawText("Pressione ESC para voltar", 30, ctx->altura - 50, 20, GRAY);
 }
 
@@ -276,7 +270,6 @@ void DrawMenuAjustes(GameContext *ctx) {
 
     DrawText(TextFormat("Volume Geral: < %0.0f%% >", ctx->volumeGeral * 100), ctx->largura / 2 - 180, ctx->altura / 2, 40, YELLOW);
     
-
     DrawText("Pressione ESC para voltar", 30, ctx->altura - 50, 20, GRAY);
 }
 
@@ -289,11 +282,8 @@ void DrawJogando(GameContext *ctx) {
     DrawTextureEx(ctx->framesCapivara[ctx->frameCapivara], 
         (Vector2){ctx->deslocamentoX + 550, ctx->altura/2 - (hCap/2)}, 0, escala, WHITE);
 
-
     for(int i = 0; i < 4; i++) {
-
         DrawRectangle(ctx->deslocamentoX + i * 150, 0, 100, ctx->altura, ColorAlpha(LIGHTGRAY, 0.6f));
-
         DrawCircleLines(ctx->deslocamentoX + 50 + i * 150, ctx->yAlvo, RAIO_NOTA + 2, BLACK);
         
         const char* teclasStr[] = {"C", "V", "N", "M"};
@@ -312,13 +302,11 @@ void DrawJogando(GameContext *ctx) {
 
             if(y > -50 && y < ctx->altura) {
                 Color corNota = (tempo > 180000) ? ORANGE : MAROON;
-
                 DrawCircle(ctx->deslocamentoX + 50 + at->botao * 150, (int)y, RAIO_NOTA, corNota);
             }
         }
         at = at->prox;
     }
-
 
     DrawText(TextFormat("PONTOS: %06d", ctx->pontuacao), 30, 30, 30, DARKGRAY);
     DrawText(ctx->mensagemFeedback, ctx->largura / 2 - MeasureText(ctx->mensagemFeedback, 40) / 2, 80, 40, GOLD);
@@ -338,7 +326,6 @@ void DrawTransicao(GameContext *ctx) {
 }
 
 void DrawInserirNome(GameContext *ctx) {
-
     Vector2 tamTitulo = MeasureTextEx(ctx->fonteTitulo, "FIM DE JOGO", 60, 2);
     DrawTextEx(ctx->fonteTitulo, "FIM DE JOGO", (Vector2){ctx->largura / 2 - tamTitulo.x / 2, ctx->altura / 4}, 60, 2, WHITE);
 
@@ -362,5 +349,7 @@ void UnloadGameResources(GameContext *ctx) {
     for(int i=0; i<6; i++) UnloadTexture(ctx->framesMenuTitulo[i]);
     UnloadTexture(ctx->mapaBase);
     UnloadFont(ctx->fonteTitulo);
-    UnloadMusicStream(ctx->musicaAtual);
+    if (IsMusicValid(ctx->musicaAtual)) {
+        UnloadMusicStream(ctx->musicaAtual);
+    }
 }
