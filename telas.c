@@ -17,13 +17,13 @@ const char* audiosRef[NUM_MUSICAS] = {
 };
 
 const char* mapasRef[NUM_MUSICAS] = {
-    "mapa_praieira.txt", "mapa_anunciacao.txt", "mapa_frevo_mulher.txt",
-    "mapa_leao_do_norte.txt", "mapa_voltei_recife.txt"
+    "mapas/mapa_praieira.txt", "mapas/mapa_anunciacao.txt", "mapas/mapa_frevo_mulher.txt",
+    "mapas/mapa_leao_do_norte.txt", "mapas/mapa_voltei_recife.txt"
 };
 
 const char* rankingsRef[NUM_MUSICAS] = {
-    "ranking_praieira.txt", "ranking_anunciacao.txt", "ranking_frevo_mulher.txt",
-    "ranking_leao_do_norte.txt", "ranking_voltei_recife.txt"
+    "rankings/ranking_praieira.txt", "rankings/ranking_anunciacao.txt", "rankings/ranking_frevo_mulher.txt",
+    "rankings/ranking_leao_do_norte.txt", "rankings/ranking_voltei_recife.txt"
 };
 
 void InitGameContext(GameContext *ctx) {
