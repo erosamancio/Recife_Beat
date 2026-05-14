@@ -3,7 +3,7 @@
 
 #include "raylib.h"
 #include "ranking.h"
-#include "musica_praieira.h"
+#include "mapa.h"
 
 typedef enum {
     MENU_PRINCIPAL,

@@ -1,6 +1,6 @@
 TARGET = jogo
 CC = gcc
-SRC = main.c telas.c ranking.c musica_praieira.c
+SRC = main.c telas.c ranking.c mapa.c
 CFLAGS = -Wall -std=c99
 LDFLAGS = -lraylib
 
