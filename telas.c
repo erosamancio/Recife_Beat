@@ -4,7 +4,6 @@
 
 #define NUM_MUSICAS 5
 #define RAIO_NOTA 30
-#define VELOCIDADE 0.5f
 
 const char* titulosMusicasRef[NUM_MUSICAS] = {
     "A Praieira - Chico Science", "Anunciacao - Alceu Valenca",
@@ -88,6 +87,10 @@ void UpdateMenuMusicas(GameContext *ctx) {
         }
         
         ctx->musicaAtual = LoadMusicStream(audiosRef[ctx->opcaoMusica]);
+        
+        // Desativa o loop infinito padrao da Raylib
+        ctx->musicaAtual.looping = false;
+        
         ctx->mapaAtualCaminho = mapasRef[ctx->opcaoMusica]; 
         ctx->rankingAtualCaminho = rankingsRef[ctx->opcaoMusica];
         carregar_mapa(ctx->mapaAtualCaminho);
@@ -120,11 +123,25 @@ void UpdateTransicao(GameContext *ctx) {
 void UpdateJogando(GameContext *ctx) {
     UpdateMusicStream(ctx->musicaAtual);
     float tempo_ms = GetMusicTimePlayed(ctx->musicaAtual) * 1000.0f;
+    float duracao_total = GetMusicTimeLength(ctx->musicaAtual) * 1000.0f;
 
     ctx->timerCapivara += GetFrameTime();
     if (ctx->timerCapivara >= 0.25f) {
         ctx->timerCapivara = 0.0f;
         ctx->frameCapivara = (ctx->frameCapivara + 1) % 4;
+    }
+    
+    // SISTEMA DE FIM DE JOGO (Encerra quando a musica acaba)
+    if (duracao_total > 0 && tempo_ms >= duracao_total - 50.0f) {
+        StopMusicStream(ctx->musicaAtual);
+        if (!ctx->modoEditor && ctx->pontuacao > 0) {
+            ctx->estadoAtual = INSERIR_NOME;
+            ctx->nomeInput[0] = '\0'; ctx->contLetras = 0;
+        } else {
+            ctx->estadoAtual = MENU_PRINCIPAL;
+            ctx->pontuacao = 0;
+        }
+        resetar_notas();
     }
 
     if (IsKeyPressed(KEY_ESCAPE)) {
@@ -165,7 +182,24 @@ void UpdateJogando(GameContext *ctx) {
                 Nota *at = inicio;
                 while (at != NULL) {
                     if (at->ativa && at->botao == i) {
-                        float y = ctx->yAlvo - (at->tempo_ms - tempo_ms) * VELOCIDADE;
+                        
+                        /* ==============================================================
+                           SISTEMA DE VELOCIDADE DINAMICA (COLISAO)
+                           ============================================================== */
+                        float vel_nota = 0.42f; // Velocidade base (Normal)
+                        if (duracao_total > 0) {
+                            if (at->tempo_ms < duracao_total * 0.25f) {
+                                vel_nota = 0.32f; // Inicio: 0% a 25% (Mais devagar)
+                            } else if (at->tempo_ms < duracao_total * 0.80f) {
+                                vel_nota = 0.42f; // Meio: 25% a 80% (Normal)
+                            } else {
+                                vel_nota = 0.55f; // Final: 80% a 100% (Mais rapido)
+                            }
+                        }
+                        
+                        float y = ctx->yAlvo - (at->tempo_ms - tempo_ms) * vel_nota;
+                        /* ============================================================== */
+
                         if (fabsf(y - ctx->yAlvo) < RAIO_NOTA * 2) {
                             ctx->pontuacao += 100;
                             at->ativa = false;
@@ -291,10 +325,28 @@ void DrawJogando(GameContext *ctx) {
     }
 
     float tempo = GetMusicTimePlayed(ctx->musicaAtual) * 1000.0f;
+    float duracao_total = GetMusicTimeLength(ctx->musicaAtual) * 1000.0f;
+    
     Nota *at = inicio;
     while(at != NULL) {
         if(at->ativa) {
-            float y = ctx->yAlvo - (at->tempo_ms - tempo) * VELOCIDADE;
+            
+            /* ==============================================================
+               SISTEMA DE VELOCIDADE DINAMICA (DESENHO NA TELA)
+               ============================================================== */
+            float vel_nota = 0.42f; // Velocidade base (Normal)
+            if (duracao_total > 0) {
+                if (at->tempo_ms < duracao_total * 0.25f) {
+                    vel_nota = 0.32f; // Inicio: 0% a 25% (Mais devagar)
+                } else if (at->tempo_ms < duracao_total * 0.80f) {
+                    vel_nota = 0.42f; // Meio: 25% a 80% (Normal)
+                } else {
+                    vel_nota = 0.55f; // Final: 80% a 100% (Mais rapido)
+                }
+            }
+            
+            float y = ctx->yAlvo - (at->tempo_ms - tempo) * vel_nota;
+            /* ============================================================== */
             
             if(y > ctx->altura + 50){
                 at->ativa = false;
