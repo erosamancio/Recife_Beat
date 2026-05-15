@@ -292,18 +292,18 @@ void DrawMenuMusicas(GameContext *ctx) {
         Color corTexto = (i == ctx->opcaoMusica) ? YELLOW : GRAY;
         const char* textoMusica = (i == ctx->opcaoMusica) ? TextFormat("> %s <", titulosMusicasRef[i]) : titulosMusicasRef[i];
         
-        int larguraTexto = MeasureText(textoMusica, 40);
-        DrawText(textoMusica, (ctx->largura / 2) - larguraTexto / 2 - 200, ctx->altura / 3 + (i * 60), 40, corTexto);
+        float larguraTexto = MeasureTextEx(ctx->fonteTitulo, textoMusica, 40, 2).x;
+        DrawTextEx(ctx->fonteTitulo, textoMusica, (Vector2){(ctx->largura / 2) - larguraTexto / 2 - 200, ctx->altura / 3 + (i * 60)}, 40, 2, corTexto);
     }
     
-    int posXRanking = ctx->largura - 450; 
-    int posYRanking = ctx->altura / 3;
+    float posXRanking = ctx->largura - 450; 
+    float posYRanking = ctx->altura / 3;
     
-    DrawText("TOP 5 - RANKING", posXRanking, posYRanking - 50, 30, GOLD);
+    DrawTextEx(ctx->fonteTitulo, "TOP 5 - RANKING", (Vector2){posXRanking, posYRanking - 50}, 30, 2, GOLD);
 
     if(qtdRankingTela == 0){
-        DrawText("Sem pontuacoes ainda...", posXRanking, posYRanking, 20, LIGHTGRAY);
-        DrawText("Jogue e seja o primeiro!", posXRanking, posYRanking + 30, 20, DARKGRAY);
+        DrawTextEx(ctx->fonteTitulo, "Sem pontuacoes ainda...", (Vector2){posXRanking, posYRanking}, 20, 2, LIGHTGRAY);
+        DrawTextEx(ctx->fonteTitulo, "Jogue e seja o primeiro!", (Vector2){posXRanking, posYRanking + 30}, 20, 2, DARKGRAY);
     }else{
         for(int i = 0; i < qtdRankingTela; i++){
             const char* linhaRank = TextFormat("%d. %s - %06d", i + 1, rankingTela[i].nome, rankingTela[i].pontos);
@@ -312,20 +312,20 @@ void DrawMenuMusicas(GameContext *ctx) {
             else if (i == 1) corRank = LIGHTGRAY;
             else if (i == 2) corRank = ORANGE;
 
-            DrawText(linhaRank, posXRanking, posYRanking + (i * 35), 25, corRank);
+            DrawTextEx(ctx->fonteTitulo, linhaRank, (Vector2){posXRanking, posYRanking + (i * 35)}, 25, 2, corRank);
         }
     }
 
-    DrawText("Pressione ESC para voltar", 30, ctx->altura - 50, 20, GRAY);
+    DrawTextEx(ctx->fonteTitulo, "Pressione ESC para voltar", (Vector2){30, ctx->altura - 50}, 20, 2, GRAY);
 }
 
 void DrawMenuAjustes(GameContext *ctx) {
     Vector2 tamTitulo = MeasureTextEx(ctx->fonteTitulo, "AJUSTES DE AUDIO", 50, 2);
     DrawTextEx(ctx->fonteTitulo, "AJUSTES DE AUDIO", (Vector2){ctx->largura / 2 - tamTitulo.x / 2, ctx->altura / 4}, 50, 2, WHITE);
 
-    DrawText(TextFormat("Volume Geral: < %0.0f%% >", ctx->volumeGeral * 100), ctx->largura / 2 - 180, ctx->altura / 2, 40, YELLOW);
+    DrawTextEx(ctx->fonteTitulo, TextFormat("Volume Geral: < %0.0f%% >", ctx->volumeGeral * 100), (Vector2){ctx->largura / 2 - 180, ctx->altura / 2}, 40, 2, YELLOW);
     
-    DrawText("Pressione ESC para voltar", 30, ctx->altura - 50, 20, GRAY);
+    DrawTextEx(ctx->fonteTitulo, "Pressione ESC para voltar", (Vector2){30, ctx->altura - 50}, 20, 2, GRAY);
 }
 
 void DrawJogando(GameContext *ctx) {
@@ -337,12 +337,45 @@ void DrawJogando(GameContext *ctx) {
     DrawTextureEx(ctx->framesCapivara[ctx->frameCapivara], 
         (Vector2){ctx->deslocamentoX + 550, ctx->altura/2 - (hCap/2)}, 0, escala, WHITE);
 
-    for(int i = 0; i < 4; i++) {
-        DrawRectangle(ctx->deslocamentoX + i * 150, 0, 100, ctx->altura, ColorAlpha(LIGHTGRAY, 0.6f));
-        DrawCircleLines(ctx->deslocamentoX + 50 + i * 150, ctx->yAlvo, RAIO_NOTA + 2, BLACK);
+    float y_horizonte = ctx->altura / 2.2f;
+    float centro_pistas = ctx->deslocamentoX + 300.0f;
+    float progresso_tela_toda = (ctx->altura - y_horizonte) / (ctx->yAlvo - y_horizonte);
+    float escala_tela_toda = 0.2f + (0.8f * progresso_tela_toda);
+
+    Color corFundoPista = ColorAlpha(BLACK, 0.6f);
+
+    for(int i = 0; i < 4; i++){
+        float x_base_esq = ctx->deslocamentoX + i * 150;
+        float x_topo_esq = centro_pistas + (x_base_esq - centro_pistas) * 0.2f;
+        float x_fim_esq = centro_pistas + (x_base_esq - centro_pistas) * escala_tela_toda;
+
+        float x_base_dir = ctx->deslocamentoX + (i + 1) * 150;
+        float x_topo_dir = centro_pistas + (x_base_dir - centro_pistas) * 0.2f;
+        float x_fim_dir = centro_pistas + (x_base_dir - centro_pistas) * escala_tela_toda;
+
+        Vector2 topoEsq = {x_topo_esq, y_horizonte};
+        Vector2 baseEsq = {x_fim_esq, ctx->altura};
+        Vector2 baseDir = {x_fim_dir, ctx->altura};
+        Vector2 topoDir = {x_topo_dir, y_horizonte};
+
+        DrawTriangle(topoEsq, baseEsq, baseDir, corFundoPista);
+        DrawTriangle(topoEsq, baseDir, topoDir, corFundoPista);
+    }
+
+    for(int i = 0; i <= 4; i++){
+        float x_base_linha = ctx->deslocamentoX + i * 150;
+        float x_topo_linha = centro_pistas + (x_base_linha - centro_pistas) * 0.2f; 
+        float x_fim_linha = centro_pistas + (x_base_linha - centro_pistas) * escala_tela_toda;
+        
+        DrawLineEx((Vector2){x_topo_linha, y_horizonte}, (Vector2){x_fim_linha, ctx->altura}, 4.0f, ColorAlpha(LIGHTGRAY, 0.5f));
+    }
+
+    for(int i = 0; i < 4; i++){
+        float x_base_pista = ctx->deslocamentoX + 75 + i * 150;
+        DrawCircleLines(x_base_pista, ctx->yAlvo, RAIO_NOTA + 2, BLACK);
         
         const char* teclasStr[] = {"C", "V", "N", "M"};
-        DrawText(teclasStr[i], ctx->deslocamentoX + 40 + i * 150, ctx->yAlvo - 15, 30, DARKGRAY);
+        DrawTextEx(ctx->fonteTitulo, teclasStr[i], (Vector2){x_base_pista - 10, ctx->yAlvo - 15}, 30, 2, WHITE);
     }
 
     float tempo = GetMusicTimePlayed(ctx->musicaAtual) * 1000.0f;
@@ -364,18 +397,27 @@ void DrawJogando(GameContext *ctx) {
                 at->ativa = false;
             }
 
-            if(y > -50 && y < ctx->altura) {
+            if(y > y_horizonte && y < ctx->altura){
+                float progresso = (y - y_horizonte) / (ctx->yAlvo - y_horizonte);
+                if(progresso < 0.0f) progresso = 0.0f;
+                float escala_perspectiva = 0.2f + (0.8f * progresso);
+                float x_base_nota = ctx->deslocamentoX + 75 + at->botao * 150;
+                
+                float x_atual = centro_pistas + (x_base_nota - centro_pistas) * escala_perspectiva;
+                float raio_atual = RAIO_NOTA * escala_perspectiva;
+
                 Color corNota = (tempo > 180000) ? ORANGE : MAROON;
-                DrawCircle(ctx->deslocamentoX + 50 + at->botao * 150, (int)y, RAIO_NOTA, corNota);
+                DrawCircle((int)x_atual, (int)y, raio_atual, corNota);
             }
         }
         at = at->prox;
     }
 
-    DrawText(TextFormat("PONTOS: %06d", ctx->pontuacao), 30, 30, 30, DARKGRAY);
+    DrawTextEx(ctx->fonteTitulo, TextFormat("PONTOS: %06d", ctx->pontuacao), (Vector2){30, 30}, 30, 2, WHITE);
     
     if (ctx->modoEditor) {
-        DrawText(ctx->mensagemFeedback, ctx->largura / 2 - MeasureText(ctx->mensagemFeedback, 40) / 2, 80, 40, GOLD);
+        float msgLargura = MeasureTextEx(ctx->fonteTitulo, ctx->mensagemFeedback, 40, 2).x;
+        DrawTextEx(ctx->fonteTitulo, ctx->mensagemFeedback, (Vector2){ctx->largura / 2 - msgLargura / 2, 80}, 40, 2, GOLD);
     } else {
         if (feedbackTimer > 0.0f) {
             Texture2D texDesenhar = texBom;
@@ -391,11 +433,11 @@ void DrawJogando(GameContext *ctx) {
     }
     
     Vector2 tamGameplay = MeasureTextEx(ctx->fonteTitulo, titulosMusicasRef[ctx->opcaoMusica], 30, 2);
-    DrawTextEx(ctx->fonteTitulo, titulosMusicasRef[ctx->opcaoMusica], (Vector2){ctx->largura - tamGameplay.x - 30, 30}, 30, 2, MAROON);
+    DrawTextEx(ctx->fonteTitulo, titulosMusicasRef[ctx->opcaoMusica], (Vector2){ctx->largura - tamGameplay.x - 30, 30}, 30, 2, WHITE);
 
     if(ctx->modoEditor){
         DrawRectangle(0, 0, ctx->largura, 50, Fade(RED, 0.8f));
-        DrawText("MODO EDITOR | TOQUE PARA GRAVAR | S: SALVAR | DELETE: LIMPAR", 30, 15, 20, WHITE);
+        DrawTextEx(ctx->fonteTitulo, "MODO EDITOR | TOQUE PARA GRAVAR | S: SALVAR | DELETE: LIMPAR", (Vector2){30, 15}, 20, 2, WHITE);
     }
 }
 
@@ -408,19 +450,25 @@ void DrawInserirNome(GameContext *ctx) {
     Vector2 tamTitulo = MeasureTextEx(ctx->fonteTitulo, "FIM DE JOGO", 60, 2);
     DrawTextEx(ctx->fonteTitulo, "FIM DE JOGO", (Vector2){ctx->largura / 2 - tamTitulo.x / 2, ctx->altura / 4}, 60, 2, WHITE);
 
-    DrawText(TextFormat("PONTUACAO: %d", ctx->pontuacao), ctx->largura / 2 - MeasureText(TextFormat("PONTUACAO: %d", ctx->pontuacao), 40) / 2, ctx->altura / 2 - 60, 40, GOLD);
-    DrawText("DIGITE SEU NOME:", ctx->largura / 2 - MeasureText("DIGITE SEU NOME:", 30) / 2, ctx->altura / 2 + 20, 30, GRAY);
+    const char* ptsStr = TextFormat("PONTUACAO: %d", ctx->pontuacao);
+    float ptsLargura = MeasureTextEx(ctx->fonteTitulo, ptsStr, 40, 2).x;
+    DrawTextEx(ctx->fonteTitulo, ptsStr, (Vector2){ctx->largura / 2 - ptsLargura / 2, ctx->altura / 2 - 60}, 40, 2, GOLD);
+    
+    float digLargura = MeasureTextEx(ctx->fonteTitulo, "DIGITE SEU NOME:", 30, 2).x;
+    DrawTextEx(ctx->fonteTitulo, "DIGITE SEU NOME:", (Vector2){ctx->largura / 2 - digLargura / 2, ctx->altura / 2 + 20}, 30, 2, GRAY);
     
     DrawRectangle(ctx->largura / 2 - 200, ctx->altura / 2 + 70, 400, 50, LIGHTGRAY);
     DrawRectangleLines(ctx->largura / 2 - 200, ctx->altura / 2 + 70, 400, 50, DARKGRAY);
     
-    DrawText(ctx->nomeInput, ctx->largura / 2 - MeasureText(ctx->nomeInput, 30) / 2, ctx->altura / 2 + 80, 30, BLACK);
+    float nomeLargura = MeasureTextEx(ctx->fonteTitulo, ctx->nomeInput, 30, 2).x;
+    DrawTextEx(ctx->fonteTitulo, ctx->nomeInput, (Vector2){ctx->largura / 2 - nomeLargura / 2, ctx->altura / 2 + 80}, 30, 2, BLACK);
 
     if (((int)(GetTime() * 2)) % 2 == 0 && ctx->contLetras < 15) {
-        DrawText("_", ctx->largura / 2 + MeasureText(ctx->nomeInput, 30) / 2 + 5, ctx->altura / 2 + 80, 30, MAROON);
+        DrawTextEx(ctx->fonteTitulo, "_", (Vector2){ctx->largura / 2 + nomeLargura / 2 + 5, ctx->altura / 2 + 80}, 30, 2, MAROON);
     }
 
-    DrawText("Pressione ENTER para salvar", ctx->largura / 2 - MeasureText("Pressione ENTER para salvar", 20) / 2, ctx->altura - 100, 20, DARKGRAY);
+    float enterLargura = MeasureTextEx(ctx->fonteTitulo, "Pressione ENTER para salvar", 20, 2).x;
+    DrawTextEx(ctx->fonteTitulo, "Pressione ENTER para salvar", (Vector2){ctx->largura / 2 - enterLargura / 2, ctx->altura - 100}, 20, 2, DARKGRAY);
 }
 
 void UnloadGameResources(GameContext *ctx) {
