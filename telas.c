@@ -132,6 +132,19 @@ void UpdateTransicao(GameContext *ctx) {
     }
 }
 
+bool VerificaInputPista(GameContext *ctx, int pista){
+    if (IsKeyPressed(ctx->teclas[pista])) return true;
+
+    if(IsGamepadAvailable(0)){
+        if (pista == 0 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) return true;   // Setinha Esquerda
+        if (pista == 1 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) return true;  // Setinha Direita
+        if (pista == 2 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_LEFT)) return true;  // Quadrado / X
+        if (pista == 3 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)) return true; // Bola / B (Xbox)
+    }
+
+    return false;
+}
+
 void UpdateJogando(GameContext *ctx) {
     UpdateMusicStream(ctx->musicaAtual);
     float tempo_ms = GetMusicTimePlayed(ctx->musicaAtual) * 1000.0f;
@@ -181,8 +194,8 @@ void UpdateJogando(GameContext *ctx) {
     }
 
     if (ctx->modoEditor) {
-        for (int i = 0; i < 4; i++) {
-            if (IsKeyPressed(ctx->teclas[i])) inserir_nota((int)tempo_ms, i);
+        for (int i = 0; i < 4; i++){
+            if(VerificaInputPista(ctx, i)) inserir_nota((int)tempo_ms, i);
         }
         if (IsKeyPressed(KEY_S)) {
             salvar_mapa(ctx->mapaAtualCaminho);
@@ -193,11 +206,11 @@ void UpdateJogando(GameContext *ctx) {
             TextCopy(ctx->mensagemFeedback, "MAPA LIMPO!");
         }
     } else {
-        for (int i = 0; i < 4; i++) {
-            if (IsKeyPressed(ctx->teclas[i])) {
+        for(int i = 0; i < 4; i++){
+            if(VerificaInputPista(ctx, i)){
                 Nota *at = inicio;
-                while (at != NULL) {
-                    if (at->ativa && at->botao == i) {
+                while(at != NULL){
+                    if(at->ativa && at->botao == i){
                         
                         float vel_nota = 0.42f; 
                         if (duracao_total > 0) {
