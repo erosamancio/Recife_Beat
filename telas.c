@@ -157,6 +157,7 @@ void UpdateJogando(GameContext *ctx) {
             ctx->pontuacao = 0;
         }
         resetar_notas();
+        ResetarFeedback();
     }
 
     if (IsKeyPressed(KEY_ESCAPE)) {
@@ -169,6 +170,7 @@ void UpdateJogando(GameContext *ctx) {
             ctx->pontuacao = 0;
         }
         resetar_notas();
+        ResetarFeedback();
     }
 
     if (((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_LEFT_SUPER)) && IsKeyDown(KEY_LEFT_SHIFT) && IsKeyPressed(KEY_X))) {
@@ -293,13 +295,13 @@ void DrawMenuMusicas(GameContext *ctx) {
         DrawTextEx(ctx->fonteTitulo, "Jogue e seja o primeiro!", (Vector2){posXRanking, posYRanking + 30}, 20, 2, DARKGRAY);
     }else{
         for(int i = 0; i < qtdRankingTela; i++){
-            const char* linhaRank = TextFormat("%d. %s - %06d", i + 1, rankingTela[i].nome, rankingTela[i].pontos);
+            const char* inlineRank = TextFormat("%d. %s - %06d", i + 1, rankingTela[i].nome, rankingTela[i].pontos);
             Color corRank = WHITE;
             if (i == 0) corRank = GOLD;
             else if (i == 1) corRank = LIGHTGRAY;
             else if (i == 2) corRank = ORANGE;
 
-            DrawTextEx(ctx->fonteTitulo, linhaRank, (Vector2){posXRanking, posYRanking + (i * 35)}, 25, 2, corRank);
+            DrawTextEx(ctx->fonteTitulo, inlineRank, (Vector2){posXRanking, posYRanking + (i * 35)}, 25, 2, corRank);
         }
     }
 
@@ -381,6 +383,7 @@ void DrawJogando(GameContext *ctx) {
             float y = ctx->yAlvo - (at->tempo_ms - tempo) * vel_nota;
             
             if(y > ctx->altura + 50){
+                RegistrarMiss(ctx);
                 at->ativa = false;
             }
 
