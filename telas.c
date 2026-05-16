@@ -31,6 +31,8 @@ static Texture2D texPerfeito = {0};
 static bool texturasCarregadas = false;
 static float feedbackTimer = 0.0f;
 static int tipoFeedback = 0; 
+static float feedbackOffsetX = 0.0f;
+static float feedbackOffsetY = 0.0f;
 
 void InitGameContext(GameContext *ctx) {
     ctx->largura = GetScreenWidth();
@@ -136,10 +138,10 @@ bool VerificaInputPista(GameContext *ctx, int pista){
     if (IsKeyPressed(ctx->teclas[pista])) return true;
 
     if(IsGamepadAvailable(0)){
-        if (pista == 0 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) return true;   // Setinha Esquerda
-        if (pista == 1 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) return true;  // Setinha Direita
-        if (pista == 2 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_LEFT)) return true;  // Quadrado / X
-        if (pista == 3 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)) return true; // Bola / B (Xbox)
+        if (pista == 0 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) return true;
+        if (pista == 1 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) return true;
+        if (pista == 2 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_LEFT)) return true;
+        if (pista == 3 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)) return true;
     }
 
     return false;
@@ -237,6 +239,9 @@ void UpdateJogando(GameContext *ctx) {
                             }
                             
                             feedbackTimer = 0.5f; 
+                            feedbackOffsetX = (float)(GetRandomValue(-30, 30));
+                            feedbackOffsetY = (float)(GetRandomValue(-20, 20));
+                            
                             at->ativa = false;
                             break;
                         }
@@ -437,10 +442,10 @@ void DrawJogando(GameContext *ctx) {
             if (tipoFeedback == 2) texDesenhar = texMuitoBom;
             else if (tipoFeedback == 3) texDesenhar = texPerfeito;
             
-            float escalaTex = 380.0f / (float)texDesenhar.height;
+            float escalaTex = 480.0f / (float)texDesenhar.height;
             float drawWidth = texDesenhar.width * escalaTex;
             
-            Vector2 pos = { (float)ctx->largura / 2.0f - drawWidth / 2.0f, 80.0f };
+            Vector2 pos = { (float)ctx->largura / 2.0f - drawWidth / 2.0f + feedbackOffsetX, 80.0f + feedbackOffsetY };
             DrawTextureEx(texDesenhar, pos, 0.0f, escalaTex, WHITE);
         }
     }
