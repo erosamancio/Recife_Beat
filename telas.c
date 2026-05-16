@@ -1,4 +1,5 @@
 #include "telas.h"
+#include "pontos.h"
 #include <math.h>
 #include <stdlib.h>
 
@@ -25,15 +26,6 @@ const char* rankingsRef[NUM_MUSICAS] = {
     "rankings/ranking_leao_do_norte.txt", "rankings/ranking_voltei_recife.txt"
 };
 
-static Texture2D texBom = {0};
-static Texture2D texMuitoBom = {0};
-static Texture2D texPerfeito = {0};
-static bool texturasCarregadas = false;
-static float feedbackTimer = 0.0f;
-static int tipoFeedback = 0; 
-static float feedbackOffsetX = 0.0f;
-static float feedbackOffsetY = 0.0f;
-
 void InitGameContext(GameContext *ctx) {
     ctx->largura = GetScreenWidth();
     ctx->altura = GetScreenHeight();
@@ -58,12 +50,7 @@ void InitGameContext(GameContext *ctx) {
     
     ctx->musicaAtual = (Music){ 0 };
 
-    if (!texturasCarregadas) {
-        texBom = LoadTexture("images/mensagens/bom.png");
-        texMuitoBom = LoadTexture("images/mensagens/muito_bom.png");
-        texPerfeito = LoadTexture("images/mensagens/perfeito.png");
-        texturasCarregadas = true;
-    }
+    InitPontos();
 }
 
 void UpdateMenuPrincipal(GameContext *ctx) {
@@ -152,9 +139,7 @@ void UpdateJogando(GameContext *ctx) {
     float tempo_ms = GetMusicTimePlayed(ctx->musicaAtual) * 1000.0f;
     float duracao_total = GetMusicTimeLength(ctx->musicaAtual) * 1000.0f;
 
-    if (feedbackTimer > 0.0f) {
-        feedbackTimer -= GetFrameTime();
-    }
+    AtualizarPontosTempo(GetFrameTime());
 
     ctx->timerCapivara += GetFrameTime();
     if (ctx->timerCapivara >= 0.25f) {
@@ -192,7 +177,7 @@ void UpdateJogando(GameContext *ctx) {
         PlayMusicStream(ctx->musicaAtual);
         resetar_notas();
         TextCopy(ctx->mensagemFeedback, "");
-        feedbackTimer = 0.0f;
+        ResetarFeedback();
     }
 
     if (ctx->modoEditor) {
@@ -225,23 +210,7 @@ void UpdateJogando(GameContext *ctx) {
                         float dist = fabsf(y - ctx->yAlvo);
 
                         if (dist < RAIO_NOTA * 2) {
-                            float precisao = (1.0f - (dist / (RAIO_NOTA * 2.0f))) * 100.0f;
-                            
-                            if (precisao >= 80.0f) {
-                                ctx->pontuacao += 100;
-                                tipoFeedback = 3; 
-                            } else if (precisao >= 30.0f) {
-                                ctx->pontuacao += 75;
-                                tipoFeedback = 2; 
-                            } else {
-                                ctx->pontuacao += 50;
-                                tipoFeedback = 1; 
-                            }
-                            
-                            feedbackTimer = 0.5f; 
-                            feedbackOffsetX = (float)(GetRandomValue(-30, 30));
-                            feedbackOffsetY = (float)(GetRandomValue(-20, 20));
-                            
+                            CalcularAcerto(ctx, dist, RAIO_NOTA * 2.0f);
                             at->ativa = false;
                             break;
                         }
@@ -437,17 +406,7 @@ void DrawJogando(GameContext *ctx) {
         float msgLargura = MeasureTextEx(ctx->fonteTitulo, ctx->mensagemFeedback, 40, 2).x;
         DrawTextEx(ctx->fonteTitulo, ctx->mensagemFeedback, (Vector2){ctx->largura / 2 - msgLargura / 2, 80}, 40, 2, GOLD);
     } else {
-        if (feedbackTimer > 0.0f) {
-            Texture2D texDesenhar = texBom;
-            if (tipoFeedback == 2) texDesenhar = texMuitoBom;
-            else if (tipoFeedback == 3) texDesenhar = texPerfeito;
-            
-            float escalaTex = 480.0f / (float)texDesenhar.height;
-            float drawWidth = texDesenhar.width * escalaTex;
-            
-            Vector2 pos = { (float)ctx->largura / 2.0f - drawWidth / 2.0f + feedbackOffsetX, 80.0f + feedbackOffsetY };
-            DrawTextureEx(texDesenhar, pos, 0.0f, escalaTex, WHITE);
-        }
+        DrawFeedback(ctx);
     }
     
     Vector2 tamGameplay = MeasureTextEx(ctx->fonteTitulo, titulosMusicasRef[ctx->opcaoMusica], 30, 2);
@@ -498,10 +457,5 @@ void UnloadGameResources(GameContext *ctx) {
         UnloadMusicStream(ctx->musicaAtual);
     }
     
-    if (texturasCarregadas) {
-        UnloadTexture(texBom);
-        UnloadTexture(texMuitoBom);
-        UnloadTexture(texPerfeito);
-        texturasCarregadas = false;
-    }
+    UnloadPontos();
 }
