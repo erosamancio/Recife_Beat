@@ -51,6 +51,11 @@ typedef struct {
 
     const char* mapaAtualCaminho;
     const char* rankingAtualCaminho;
+
+    Texture2D btnBase[4];      
+    Texture2D btnClicado[4];   
+    Texture2D btnNota[4];      
+    float timerClickPista[4];
 } GameContext;
 
 void InitGameContext(GameContext *ctx);
