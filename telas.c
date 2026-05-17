@@ -5,6 +5,7 @@
 
 #define NUM_MUSICAS 5
 #define RAIO_NOTA 30
+#define TOTAL_INIMIGOS 4
 
 const char* titulosMusicasRef[NUM_MUSICAS] = {
     "A Praieira - Chico Science", "Anunciacao - Alceu Valenca",
@@ -24,6 +25,13 @@ const char* mapasRef[NUM_MUSICAS] = {
 const char* rankingsRef[NUM_MUSICAS] = {
     "rankings/ranking_praieira.txt", "rankings/ranking_anunciacao.txt", "rankings/ranking_frevo_mulher.txt",
     "rankings/ranking_leao_do_norte.txt", "rankings/ranking_voltei_recife.txt"
+};
+
+const char* opcoesInimigos[] = {
+    "images/tubarao",
+    "images/cobra",
+    "images/rato",
+    "images/sport"
 };
 
 void InitGameContext(GameContext *ctx) {
@@ -47,7 +55,10 @@ void InitGameContext(GameContext *ctx) {
 
     ctx->frameCapivara = 0; ctx->timerCapivara = 0.0f;
     ctx->frameMenu = 0; ctx->timerMenu = 0.0f;
-    
+
+    ctx->frameInimigo = 0;
+    ctx->timerInimigo = 0.0f;
+
     ctx->musicaAtual = (Music){ 0 };
 
     InitPontos();
@@ -88,6 +99,17 @@ void UpdateMenuMusicas(GameContext *ctx) {
         if (IsMusicValid(ctx->musicaAtual)) {
             UnloadMusicStream(ctx->musicaAtual);
         }
+
+        for (int i = 0; i < 4; i++) {
+            UnloadTexture(ctx->framesInimigoAtual[i]);
+        }
+        int inimigoSorteado = GetRandomValue(0, TOTAL_INIMIGOS - 1);
+
+        for (int i = 0; i < 4; i++) {
+            ctx->framesInimigoAtual[i] = LoadTexture(TextFormat("%s%d.png", opcoesInimigos[inimigoSorteado], i + 1));
+        }
+        ctx->frameInimigo = 0;
+        ctx->timerInimigo = 0.0f;
         
         ctx->musicaAtual = LoadMusicStream(audiosRef[ctx->opcaoMusica]);
         ctx->musicaAtual.looping = false;
@@ -146,7 +168,11 @@ void UpdateJogando(GameContext *ctx) {
         ctx->timerCapivara = 0.0f;
         ctx->frameCapivara = (ctx->frameCapivara + 1) % 4;
     }
-    
+    ctx->timerInimigo += GetFrameTime();
+    if (ctx->timerInimigo >= 0.22f) { 
+        ctx->timerInimigo = 0.0f;
+        ctx->frameInimigo = (ctx->frameInimigo + 1) % 4;
+    }
     if (duracao_total > 0 && tempo_ms >= duracao_total - 50.0f) {
         StopMusicStream(ctx->musicaAtual);
         if (!ctx->modoEditor && ctx->pontuacao > 0) {
@@ -326,6 +352,14 @@ void DrawJogando(GameContext *ctx) {
     DrawTextureEx(ctx->framesCapivara[ctx->frameCapivara], 
         (Vector2){ctx->deslocamentoX + 550, ctx->altura/2 - (hCap/2)}, 0, escala, WHITE);
 
+    Texture2D texAtual = ctx->framesInimigoAtual[ctx->frameInimigo];
+    
+    if (texAtual.width > 0) {
+        float hInimigo = texAtual.height * escala;
+        Vector2 posInimigo = { ctx->deslocamentoX - 500, ctx->altura/2 - (hInimigo/2) };
+        DrawTextureEx(texAtual, posInimigo, 0, escala, WHITE);
+    }
+
     float y_horizonte = ctx->altura / 2.2f;
     float centro_pistas = ctx->deslocamentoX + 300.0f;
     float progresso_tela_toda = (ctx->altura - y_horizonte) / (ctx->yAlvo - y_horizonte);
@@ -456,6 +490,8 @@ void UnloadGameResources(GameContext *ctx) {
     for(int i=0; i<6; i++) UnloadTexture(ctx->framesMenuTitulo[i]);
     UnloadTexture(ctx->mapaBase);
     UnloadFont(ctx->fonteTitulo);
+    for(int i=0; i<4; i++) UnloadTexture(ctx->framesInimigoAtual[i]);
+
     if (IsMusicValid(ctx->musicaAtual)) {
         UnloadMusicStream(ctx->musicaAtual);
     }

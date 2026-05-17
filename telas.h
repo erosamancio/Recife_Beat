@@ -45,6 +45,10 @@ typedef struct {
     int frameMenu;
     float timerMenu;
 
+    Texture2D framesInimigoAtual[4]; 
+    int frameInimigo;                
+    float timerInimigo;
+
     const char* mapaAtualCaminho;
     const char* rankingAtualCaminho;
 } GameContext;
