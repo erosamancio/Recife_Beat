@@ -18,7 +18,6 @@ extern Nota *inicio;
 void inserir_nota(int tempo, int botao);
 void liberar_notas();
 void resetar_notas();
-void GerarFaseCompleta();
 void salvar_mapa(const char *nomeArquivo);
 void carregar_mapa(const char *nomeArquivo);
 
