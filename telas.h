@@ -39,6 +39,7 @@ typedef struct {
     Texture2D framesCapivara[4];
     Texture2D framesMenuTitulo[6];
     Music musicaAtual;
+    Music musicaMenu;
     
     int frameCapivara;
     float timerCapivara;

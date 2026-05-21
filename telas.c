@@ -67,6 +67,9 @@ void InitGameContext(GameContext *ctx) {
     ctx->timerInimigo = 0.0f;
 
     ctx->musicaAtual = (Music){ 0 };
+    ctx->musicaMenu = LoadMusicStream("audio/a_praieira.ogg");
+    ctx->musicaMenu.looping = true;
+    PlayMusicStream(ctx->musicaMenu);
     const char* coresBotoes[] = { "azul", "verde", "rosa", "vermelho" };
 
     for (int i = 0; i < 4; i++) {
@@ -83,6 +86,7 @@ void InitGameContext(GameContext *ctx) {
 
 
 void UpdateMenuPrincipal(GameContext *ctx) {
+    UpdateMusicStream(ctx->musicaMenu);
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) ctx->opcaoMenu = (ctx->opcaoMenu + 1) % 3;
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) ctx->opcaoMenu = (ctx->opcaoMenu - 1 + 3) % 3;
 
@@ -106,6 +110,7 @@ void UpdateMenuPrincipal(GameContext *ctx) {
 
 
 void UpdateMenuMusicas(GameContext *ctx) {
+    UpdateMusicStream(ctx->musicaMenu);
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) {
         ctx->opcaoMusica = (ctx->opcaoMusica + 1) % NUM_MUSICAS;
         carregar_ranking_tela(rankingsRef[ctx->opcaoMusica]);
@@ -149,6 +154,7 @@ void UpdateMenuMusicas(GameContext *ctx) {
 
 
 void UpdateMenuAjustes(GameContext *ctx) {
+    UpdateMusicStream(ctx->musicaMenu);
     if (IsKeyPressed(KEY_RIGHT) && ctx->volumeGeral < 1.0f) ctx->volumeGeral += 0.1f;
     if (IsKeyPressed(KEY_LEFT) && ctx->volumeGeral > 0.0f) ctx->volumeGeral -= 0.1f;
     SetMasterVolume(ctx->volumeGeral);
@@ -209,9 +215,11 @@ void UpdateJogando(GameContext *ctx) {
         if (!ctx->modoEditor && ctx->pontuacao > 0) {
             ctx->estadoAtual = INSERIR_NOME;
             ctx->nomeInput[0] = '\0'; ctx->contLetras = 0;
+            PlayMusicStream(ctx->musicaMenu);
         } else {
             ctx->estadoAtual = MENU_PRINCIPAL;
             ctx->pontuacao = 0;
+            PlayMusicStream(ctx->musicaMenu);
         }
         resetar_notas();
         ResetarFeedback();
@@ -232,9 +240,11 @@ void UpdateJogando(GameContext *ctx) {
         if (!ctx->modoEditor && ctx->pontuacao > 0) {
             ctx->estadoAtual = INSERIR_NOME;
             ctx->nomeInput[0] = '\0'; ctx->contLetras = 0;
+            PlayMusicStream(ctx->musicaMenu);
         } else {
             ctx->estadoAtual = MENU_PRINCIPAL;
             ctx->pontuacao = 0;
+            PlayMusicStream(ctx->musicaMenu);
         }
         resetar_notas();
         ResetarFeedback();
@@ -296,6 +306,7 @@ void UpdateJogando(GameContext *ctx) {
 
 
 void UpdateInserirNome(GameContext *ctx) {
+    UpdateMusicStream(ctx->musicaMenu);
     int key = GetCharPressed();
     while (key > 0) {
         if ((key >= 32) && (key <= 125) && (ctx->contLetras < 15)) {
@@ -593,6 +604,9 @@ void UnloadGameResources(GameContext *ctx) {
 
     if (IsMusicValid(ctx->musicaAtual)) {
         UnloadMusicStream(ctx->musicaAtual);
+    }
+    if (IsMusicValid(ctx->musicaMenu)) {
+        UnloadMusicStream(ctx->musicaMenu);
     }
   
     UnloadPontos();
