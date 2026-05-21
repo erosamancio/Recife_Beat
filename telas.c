@@ -67,7 +67,7 @@ void InitGameContext(GameContext *ctx) {
     ctx->timerInimigo = 0.0f;
 
     ctx->musicaAtual = (Music){ 0 };
-    ctx->musicaMenu = LoadMusicStream("audio/a_praieira.ogg");
+    ctx->musicaMenu = LoadMusicStream("audio/musica_menu.ogg");
     ctx->musicaMenu.looping = true;
     PlayMusicStream(ctx->musicaMenu);
     const char* coresBotoes[] = { "azul", "verde", "rosa", "vermelho" };
