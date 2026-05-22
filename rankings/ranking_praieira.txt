@@ -1,3 +1,5 @@
 luiz 67000000
+lucs 51462
+lucas 48977
+lucas 44525
 eros 2092
-vasco_da_gam: 570
