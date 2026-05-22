@@ -210,19 +210,33 @@ void UpdateJogando(GameContext *ctx) {
         ctx->timerInimigo = 0.0f;
         ctx->frameInimigo = (ctx->frameInimigo + 1) % 4;
     }
-    if (duracao_total > 0 && tempo_ms >= duracao_total - 50.0f) {
+
+   bool musicaAcabou = false;
+
+    if (duracao_total > 0 && tempo_ms >= duracao_total - 100.0f) {
+        musicaAcabou = true;
+    }
+
+    if (!IsMusicStreamPlaying(ctx->musicaAtual)) {
+        musicaAcabou = true;
+    }
+
+    if (musicaAcabou) {
         StopMusicStream(ctx->musicaAtual);
+        resetar_notas();
+        ResetarFeedback();
+
         if (!ctx->modoEditor && ctx->pontuacao > 0) {
             ctx->estadoAtual = INSERIR_NOME;
-            ctx->nomeInput[0] = '\0'; ctx->contLetras = 0;
-            PlayMusicStream(ctx->musicaMenu);
+            ctx->nomeInput[0] = '\0';
+            ctx->contLetras = 0;
         } else {
             ctx->estadoAtual = MENU_PRINCIPAL;
             ctx->pontuacao = 0;
-            PlayMusicStream(ctx->musicaMenu);
         }
-        resetar_notas();
-        ResetarFeedback();
+
+        PlayMusicStream(ctx->musicaMenu);
+        return;
     }
     for (int i = 0; i < 4; i++) {
         if (ctx->timerClickPista[i] > 0.0f) {
@@ -327,8 +341,10 @@ void UpdateInserirNome(GameContext *ctx) {
             if (ctx->nomeInput[i] == ' ') ctx->nomeInput[i] = '_';
         }
         salvar_score(ctx->rankingAtualCaminho, ctx->nomeInput, ctx->pontuacao);
-        ctx->estadoAtual = MENU_PRINCIPAL;
+        carregar_ranking_tela(ctx->rankingAtualCaminho);
+        ctx->estadoAtual = MENU_MUSICAS;
         ctx->pontuacao = 0;
+        TextCopy(ctx->mensagemFeedback, "");
         TextCopy(ctx->mensagemFeedback, "");
     }
 }
