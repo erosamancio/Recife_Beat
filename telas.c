@@ -21,10 +21,10 @@ typedef struct {
 
 const MusicaInfo catalogo[NUM_MUSICAS] = {
     {"A PRAIEIRA", "CHICO CIENCE", "audio/a_praieira.ogg", "mapas/mapa_praieira.txt", "rankings/ranking_praieira.txt", "MUITO DIFICIL", RED},
-    {"ANUNCIAÇÃO", "ALCEU VALENÇA", "audio/anunciacao.ogg", "mapas/mapa_anunciacao.txt", "rankings/ranking_anunciacao.txt", "DIFICIL", ORANGE},
-    {"FREVO MULHER", "ZÉ RAMALHO", "audio/frevo_mulher.ogg", "mapas/mapa_frevo_mulher.txt", "rankings/ranking_frevo_mulher.txt", "NORMAL", GREEN},
-    {"LEÃO DO NORTE" , "LELINE", "audio/leao_do_norte.ogg", "mapas/mapa_leao_do_norte.txt", "rankings/ranking_leao_do_norte.txt", "DIFICIL", ORANGE},
-    {"VOLTEI RECIFE", "ALCEU VALENÇA", "audio/voltei_recife.ogg", "mapas/mapa_voltei_recife.txt", "rankings/ranking_voltei_recife.txt", "MUITO DIFICIL", RED}
+    {"ANUNCIAO", "ALCEU VALENCA", "audio/anunciacao.ogg", "mapas/mapa_anunciacao.txt", "rankings/ranking_anunciacao.txt", "DIFICIL", ORANGE},
+    {"FREVO MULHER", "ZE RAMALHO", "audio/frevo_mulher.ogg", "mapas/mapa_frevo_mulher.txt", "rankings/ranking_frevo_mulher.txt", "NORMAL", GREEN},
+    {"LEAO DO NORTE" , "LELINE", "audio/leao_do_norte.ogg", "mapas/mapa_leao_do_norte.txt", "rankings/ranking_leao_do_norte.txt", "DIFICIL", ORANGE},
+    {"VOLTEI RECIFE", "ALCEU VALENCA", "audio/voltei_recife.ogg", "mapas/mapa_voltei_recife.txt", "rankings/ranking_voltei_recife.txt", "MUITO DIFICIL", RED}
 };
 
 
@@ -597,7 +597,7 @@ void DrawJogando(GameContext *ctx) {
                 Vector2 origin = { destRect.width / 2.0f, destRect.height / 2.0f };
 
 
-                float rotacoesPistas[] = { -15.0f, 0.0f, 0.0f, 15.0f };
+                float rotacoesPistas[] = { 0.0f, 0.0f, 0.0f, 0.0f };
                 float rotacaoAtual = rotacoesPistas[at->botao];
 
                 DrawTexturePro(texNota, sourceRect, destRect, origin, rotacaoAtual, WHITE);
