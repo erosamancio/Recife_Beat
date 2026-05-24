@@ -361,7 +361,7 @@ void DrawMenuPrincipal(GameContext *ctx) {
     const char* opts[] = {"JOGAR", "AJUSTES", "SAIR"};
    
     for(int i = 0; i < 3; i++) {
-        float y = (ctx->altura / 2) + (i * 70);
+        float y = (ctx->altura / 2.75) + (i * 70);
         float size = 40.0f;
        
         if(i == ctx->opcaoMenu) {
