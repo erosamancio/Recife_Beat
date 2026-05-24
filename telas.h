@@ -34,10 +34,23 @@ typedef struct {
     int contLetras;
     int teclas[4];
 
+    // Nossas Fontes
     Font fonteTitulo;
+    Font fonteBebas; // Nova fonte para o Menu de Músicas
+
+    // Texturas de fundo e elementos base
     Texture2D mapaBase;
     Texture2D framesCapivara[4];
     Texture2D framesMenuTitulo[6];
+    
+    // Texturas do Menu de Músicas
+    Texture2D texMenuMusicaFundo;
+    Texture2D texBotaoMusicaNormal;
+    Texture2D texBotaoMusicaPlay;
+
+    // Controle de Visibilidade
+    bool exibindoRanking;
+
     Music musicaAtual;
     Music musicaMenu;
     

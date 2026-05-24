@@ -9,27 +9,22 @@
 #define TOTAL_INIMIGOS 4
 
 
-const char* titulosMusicasRef[NUM_MUSICAS] = {
-    "A Praieira - Chico Science", "Anunciacao - Alceu Valenca",
-    "Frevo Mulher - Amelinha", "Leao do Norte - Lenine", "Voltei Recife - Alceu Valenca"
-};
+typedef struct {
+    const char* titulo;
+    const char* artista;
+    const char* arquivoAudio;
+    const char* arquivoMapa;
+    const char* arquivoRanking;
+    const char* textoDificuldade;
+    Color corDificuldade;
+} MusicaInfo;
 
-
-const char* audiosRef[NUM_MUSICAS] = {
-    "audio/a_praieira.ogg", "audio/anunciacao.ogg", "audio/frevo_mulher.ogg",
-    "audio/leao_do_norte.ogg", "audio/voltei_recife.ogg"
-};
-
-
-const char* mapasRef[NUM_MUSICAS] = {
-    "mapas/mapa_praieira.txt", "mapas/mapa_anunciacao.txt", "mapas/mapa_frevo_mulher.txt",
-    "mapas/mapa_leao_do_norte.txt", "mapas/mapa_voltei_recife.txt"
-};
-
-
-const char* rankingsRef[NUM_MUSICAS] = {
-    "rankings/ranking_praieira.txt", "rankings/ranking_anunciacao.txt", "rankings/ranking_frevo_mulher.txt",
-    "rankings/ranking_leao_do_norte.txt", "rankings/ranking_voltei_recife.txt"
+const MusicaInfo catalogo[NUM_MUSICAS] = {
+    {"A PRAIEIRA", "CHICO CIENCE", "audio/a_praieira.ogg", "mapas/mapa_praieira.txt", "rankings/ranking_praieira.txt", "MUITO DIFICIL", RED},
+    {"ANUNCIAÇÃO", "ALCEU VALENÇA", "audio/anunciacao.ogg", "mapas/mapa_anunciacao.txt", "rankings/ranking_anunciacao.txt", "DIFICIL", ORANGE},
+    {"FREVO MULHER", "ZÉ RAMALHO", "audio/frevo_mulher.ogg", "mapas/mapa_frevo_mulher.txt", "rankings/ranking_frevo_mulher.txt", "NORMAL", GREEN},
+    {"LEÃO DO NORTE" , "LELINE", "audio/leao_do_norte.ogg", "mapas/mapa_leao_do_norte.txt", "rankings/ranking_leao_do_norte.txt", "DIFICIL", ORANGE},
+    {"VOLTEI RECIFE", "ALCEU VALENÇA", "audio/voltei_recife.ogg", "mapas/mapa_voltei_recife.txt", "rankings/ranking_voltei_recife.txt", "MUITO DIFICIL", RED}
 };
 
 
@@ -56,6 +51,7 @@ void InitGameContext(GameContext *ctx) {
     ctx->modoEditor = false;
     ctx->pontuacao = 0;
     ctx->contLetras = 0;
+    ctx->exibindoRanking = false; 
    
     ctx->teclas[0] = KEY_C; ctx->teclas[1] = KEY_V;
     ctx->teclas[2] = KEY_N; ctx->teclas[3] = KEY_M;
@@ -66,20 +62,23 @@ void InitGameContext(GameContext *ctx) {
     ctx->frameInimigo = 0;
     ctx->timerInimigo = 0.0f;
 
+    ctx->fonteBebas = LoadFontEx("fonts/BebasNeue-Regular.ttf", 60, NULL, 0);
+    ctx->texMenuMusicaFundo = LoadTexture("images/menu_musica.png"); 
+    ctx->texBotaoMusicaNormal = LoadTexture("images/menu_musica_botao.png");
+    ctx->texBotaoMusicaPlay = LoadTexture("images/menu_musica_botao_play.png");
+
     ctx->musicaAtual = (Music){ 0 };
     ctx->musicaMenu = LoadMusicStream("audio/musica_menu.ogg");
     ctx->musicaMenu.looping = true;
     PlayMusicStream(ctx->musicaMenu);
+    
     const char* coresBotoes[] = { "azul", "verde", "rosa", "vermelho" };
-
     for (int i = 0; i < 4; i++) {
         ctx->btnBase[i]    = LoadTexture(TextFormat("images/botao_%s_base.png", coresBotoes[i]));
         ctx->btnClicado[i] = LoadTexture(TextFormat("images/botao_%s_pressionado.png", coresBotoes[i]));
         ctx->btnNota[i]    = LoadTexture(TextFormat("images/botao_%s_dinamico.png", coresBotoes[i]));
-        
         ctx->timerClickPista[i] = 0.0f; 
     }
-
 
     InitPontos();
 }
@@ -94,7 +93,7 @@ void UpdateMenuPrincipal(GameContext *ctx) {
     if (IsKeyPressed(KEY_ENTER)) {
         if (ctx->opcaoMenu == 0) {
             ctx->estadoAtual = MENU_MUSICAS;
-            carregar_ranking_tela(rankingsRef[ctx->opcaoMusica]);
+            carregar_ranking_tela(catalogo[ctx->opcaoMusica].arquivoRanking);
         }
         else if (ctx->opcaoMenu == 1) ctx->estadoAtual = MENU_AJUSTES;
         else if (ctx->opcaoMenu == 2) ctx->deveFechar = true;
@@ -111,14 +110,20 @@ void UpdateMenuPrincipal(GameContext *ctx) {
 
 void UpdateMenuMusicas(GameContext *ctx) {
     UpdateMusicStream(ctx->musicaMenu);
+    
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) {
         ctx->opcaoMusica = (ctx->opcaoMusica + 1) % NUM_MUSICAS;
-        carregar_ranking_tela(rankingsRef[ctx->opcaoMusica]);
+        carregar_ranking_tela(catalogo[ctx->opcaoMusica].arquivoRanking);
     }
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) {
         ctx->opcaoMusica = (ctx->opcaoMusica - 1 + NUM_MUSICAS) % NUM_MUSICAS;
-        carregar_ranking_tela(rankingsRef[ctx->opcaoMusica]);
+        carregar_ranking_tela(catalogo[ctx->opcaoMusica].arquivoRanking);
     }
+    
+    if (IsKeyPressed(KEY_R)) {
+        ctx->exibindoRanking = !ctx->exibindoRanking;
+    }
+
     if (IsKeyPressed(KEY_ENTER)) {
         liberar_notas();
        
@@ -126,12 +131,10 @@ void UpdateMenuMusicas(GameContext *ctx) {
             UnloadMusicStream(ctx->musicaAtual);
         }
 
-
         for (int i = 0; i < 4; i++) {
             UnloadTexture(ctx->framesInimigoAtual[i]);
         }
         int inimigoSorteado = GetRandomValue(0, TOTAL_INIMIGOS - 1);
-
 
         for (int i = 0; i < 4; i++) {
             ctx->framesInimigoAtual[i] = LoadTexture(TextFormat("%s%d.png", opcoesInimigos[inimigoSorteado], i + 1));
@@ -139,11 +142,11 @@ void UpdateMenuMusicas(GameContext *ctx) {
         ctx->frameInimigo = 0;
         ctx->timerInimigo = 0.0f;
        
-        ctx->musicaAtual = LoadMusicStream(audiosRef[ctx->opcaoMusica]);
+        ctx->musicaAtual = LoadMusicStream(catalogo[ctx->opcaoMusica].arquivoAudio);
         ctx->musicaAtual.looping = false;
        
-        ctx->mapaAtualCaminho = mapasRef[ctx->opcaoMusica];
-        ctx->rankingAtualCaminho = rankingsRef[ctx->opcaoMusica];
+        ctx->mapaAtualCaminho = catalogo[ctx->opcaoMusica].arquivoMapa;
+        ctx->rankingAtualCaminho = catalogo[ctx->opcaoMusica].arquivoRanking;
         carregar_mapa(ctx->mapaAtualCaminho);
         ctx->estadoAtual = TRANSICAO;
         ctx->alphaTransicao = 1.0f;
@@ -178,14 +181,12 @@ void UpdateTransicao(GameContext *ctx) {
 bool VerificaInputPista(GameContext *ctx, int pista){
     if (IsKeyPressed(ctx->teclas[pista])) return true;
 
-
     if(IsGamepadAvailable(0)){
         if (pista == 0 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) return true;
         if (pista == 1 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) return true;
         if (pista == 2 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_LEFT)) return true;
         if (pista == 3 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)) return true;
     }
-
 
     return false;
 }
@@ -375,42 +376,87 @@ void DrawMenuPrincipal(GameContext *ctx) {
 
 
 void DrawMenuMusicas(GameContext *ctx) {
-    Vector2 tamTitulo = MeasureTextEx(ctx->fonteTitulo, "SELECIONE A MUSICA", 50, 2);
-    DrawTextEx(ctx->fonteTitulo, "SELECIONE A MUSICA", (Vector2){ctx->largura / 2 - tamTitulo.x / 2, ctx->altura / 6}, 50, 2, WHITE);
 
+    Rectangle srcFundo = {0, 0, (float)ctx->texMenuMusicaFundo.width, (float)ctx->texMenuMusicaFundo.height};
+    Rectangle dstFundo = {0, 0, (float)ctx->largura, (float)ctx->altura};
+    DrawTexturePro(ctx->texMenuMusicaFundo, srcFundo, dstFundo, (Vector2){0,0}, 0, WHITE);
+
+    float escalaBotao = 0.4f; 
+    
+    float posXBase = 70.0f;
+    float startY = 220.0f; 
+    float espacamentoY = 95.0f; 
+    
+
+    float ajusteBotaoY = -120.0f; 
 
     for(int i = 0; i < NUM_MUSICAS; i++){
-        Color corTexto = (i == ctx->opcaoMusica) ? YELLOW : GRAY;
-        const char* textoMusica = (i == ctx->opcaoMusica) ? TextFormat("> %s <", titulosMusicasRef[i]) : titulosMusicasRef[i];
-       
-        float larguraTexto = MeasureTextEx(ctx->fonteTitulo, textoMusica, 40, 2).x;
-        DrawTextEx(ctx->fonteTitulo, textoMusica, (Vector2){(ctx->largura / 2) - larguraTexto / 2 - 200, ctx->altura / 3 + (i * 60)}, 40, 2, corTexto);
+        float posY = startY + (i * espacamentoY);
+        bool selecionado = (i == ctx->opcaoMusica);
+
+        Texture2D texBotao = selecionado ? ctx->texBotaoMusicaPlay : ctx->texBotaoMusicaNormal;
+        
+
+        DrawTextureEx(texBotao, (Vector2){posXBase, posY + ajusteBotaoY}, 0.0f, escalaBotao, WHITE);
+
+        Color corTitulo = selecionado ? BLACK : WHITE;
+        Color corArtista = selecionado ? DARKGRAY : LIGHTGRAY;
+
+        float ajusteTextoY = 60.0f; 
+
+
+        float deslocamentoSelecaoX = selecionado ? 85.0f : 0.0f;
+
+        float posNumeroX = posXBase + 30.0f + deslocamentoSelecaoX;
+        float posTituloX = posXBase + 110.0f + deslocamentoSelecaoX;
+        
+
+        float posTextosY = posY + 5.0f + ajusteTextoY; 
+        float posArtistaY = posY + 38.0f + ajusteTextoY;
+        float posDificuldadeY = posY + 15.0f + ajusteTextoY; 
+        
+        DrawTextEx(ctx->fonteBebas, TextFormat("0%d", i + 1), (Vector2){posNumeroX, posTextosY}, 45, 2, corTitulo);
+        DrawTextEx(ctx->fonteBebas, catalogo[i].titulo, (Vector2){posTituloX, posTextosY}, 35, 2, corTitulo);
+        DrawTextEx(ctx->fonteBebas, catalogo[i].artista, (Vector2){posTituloX, posArtistaY}, 20, 2, corArtista);
+
+        float larguraDif = MeasureTextEx(ctx->fonteBebas, catalogo[i].textoDificuldade, 25, 2).x;
+        float posDificuldadeX = posXBase + 450.0f + deslocamentoSelecaoX - larguraDif;
+        
+        DrawTextEx(ctx->fonteBebas, catalogo[i].textoDificuldade, (Vector2){posDificuldadeX, posDificuldadeY}, 25, 2, catalogo[i].corDificuldade);
     }
-   
-    float posXRanking = ctx->largura - 450;
-    float posYRanking = ctx->altura / 3;
-   
-    DrawTextEx(ctx->fonteTitulo, "TOP 5 - RANKING", (Vector2){posXRanking, posYRanking - 50}, 30, 2, GOLD);
 
 
-    if(qtdRankingTela == 0){
-        DrawTextEx(ctx->fonteTitulo, "Sem pontuacoes ainda...", (Vector2){posXRanking, posYRanking}, 20, 2, LIGHTGRAY);
-        DrawTextEx(ctx->fonteTitulo, "Jogue e seja o primeiro!", (Vector2){posXRanking, posYRanking + 30}, 20, 2, DARKGRAY);
-    }else{
-        for(int i = 0; i < qtdRankingTela; i++){
-            const char* inlineRank = TextFormat("%d. %s - %06d", i + 1, rankingTela[i].nome, rankingTela[i].pontos);
-            Color corRank = WHITE;
-            if (i == 0) corRank = GOLD;
-            else if (i == 1) corRank = LIGHTGRAY;
-            else if (i == 2) corRank = ORANGE;
+    float posPlacarX = ctx->largura - 190.0f; 
+    float posPlacarY = 80.0f; 
+    float tamanhoFontePlacar = 35.0f;
+    
+    if(qtdRankingTela > 0){
+        const char* placar = TextFormat("%05d", rankingTela[0].pontos);
+        DrawTextEx(ctx->fonteBebas, placar, (Vector2){posPlacarX, posPlacarY}, tamanhoFontePlacar, 2, WHITE);
+    } else {
+        DrawTextEx(ctx->fonteBebas, "00000", (Vector2){posPlacarX, posPlacarY}, tamanhoFontePlacar, 2, WHITE);
+    }
 
+    if (ctx->exibindoRanking) {
+        DrawRectangle(ctx->largura - 450, 150, 400, 350, ColorAlpha(BLACK, 0.8f));
+        DrawRectangleLines(ctx->largura - 450, 150, 400, 350, ORANGE);
 
-            DrawTextEx(ctx->fonteTitulo, inlineRank, (Vector2){posXRanking, posYRanking + (i * 35)}, 25, 2, corRank);
+        DrawTextEx(ctx->fonteBebas, "TOP 5 - RANKING", (Vector2){ctx->largura - 400, 170}, 40, 2, GOLD);
+
+        if(qtdRankingTela == 0){
+            DrawTextEx(ctx->fonteBebas, "Sem pontuacoes ainda...", (Vector2){ctx->largura - 400, 250}, 25, 2, LIGHTGRAY);
+        } else {
+            for(int i = 0; i < qtdRankingTela; i++){
+                const char* inlineRank = TextFormat("%d. %s - %06d", i + 1, rankingTela[i].nome, rankingTela[i].pontos);
+                Color corRank = WHITE;
+                if (i == 0) corRank = GOLD;
+                else if (i == 1) corRank = LIGHTGRAY;
+                else if (i == 2) corRank = ORANGE;
+
+                DrawTextEx(ctx->fonteBebas, inlineRank, (Vector2){ctx->largura - 400, 230 + (i * 45)}, 30, 2, corRank);
+            }
         }
     }
-
-
-    DrawTextEx(ctx->fonteTitulo, "Pressione ESC para voltar", (Vector2){30, ctx->altura - 50}, 20, 2, GRAY);
 }
 
 
@@ -485,7 +531,6 @@ void DrawJogando(GameContext *ctx) {
         DrawLineEx((Vector2){x_topo_linha, y_horizonte}, (Vector2){x_fim_linha, ctx->altura}, 4.0f, ColorAlpha(LIGHTGRAY, 0.5f));
     }
 
-
     for(int i = 0; i < 4; i++){
         float x_base_pista = ctx->deslocamentoX + 75 + i * 150;
        
@@ -499,7 +544,11 @@ void DrawJogando(GameContext *ctx) {
         };
 
         Vector2 origin = { destRec.width / 2.0f, destRec.height / 2.0f };
-        DrawTexturePro(texBotaoAlvo, sourceRec, destRec, origin, 0.0f, WHITE);
+
+        float rotacoesPistas[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        float rotacaoAtual = rotacoesPistas[i];
+
+        DrawTexturePro(texBotaoAlvo, sourceRec, destRec, origin, rotacaoAtual, WHITE);
     }
 
 
@@ -548,7 +597,10 @@ void DrawJogando(GameContext *ctx) {
                 Vector2 origin = { destRect.width / 2.0f, destRect.height / 2.0f };
 
 
-                DrawTexturePro(texNota, sourceRect, destRect, origin, 0.0f, WHITE);
+                float rotacoesPistas[] = { -15.0f, 0.0f, 0.0f, 15.0f };
+                float rotacaoAtual = rotacoesPistas[at->botao];
+
+                DrawTexturePro(texNota, sourceRect, destRect, origin, rotacaoAtual, WHITE);
             }
         }
         at = at->prox;
@@ -564,8 +616,8 @@ void DrawJogando(GameContext *ctx) {
         DrawFeedback(ctx);
     }
    
-    Vector2 tamGameplay = MeasureTextEx(ctx->fonteTitulo, titulosMusicasRef[ctx->opcaoMusica], 30, 2);
-    DrawTextEx(ctx->fonteTitulo, titulosMusicasRef[ctx->opcaoMusica], (Vector2){ctx->largura - tamGameplay.x - 30, 30}, 30, 2, WHITE);
+    Vector2 tamGameplay = MeasureTextEx(ctx->fonteTitulo, catalogo[ctx->opcaoMusica].titulo, 30, 2);
+    DrawTextEx(ctx->fonteTitulo, catalogo[ctx->opcaoMusica].titulo, (Vector2){ctx->largura - tamGameplay.x - 30, 30}, 30, 2, WHITE);
 
 
     if(ctx->modoEditor){
@@ -617,6 +669,10 @@ void UnloadGameResources(GameContext *ctx) {
     UnloadFont(ctx->fonteTitulo);
     for(int i=0; i<4; i++) UnloadTexture(ctx->framesInimigoAtual[i]);
 
+    UnloadFont(ctx->fonteBebas);
+    UnloadTexture(ctx->texMenuMusicaFundo);
+    UnloadTexture(ctx->texBotaoMusicaNormal);
+    UnloadTexture(ctx->texBotaoMusicaPlay);
 
     if (IsMusicValid(ctx->musicaAtual)) {
         UnloadMusicStream(ctx->musicaAtual);
@@ -627,4 +683,3 @@ void UnloadGameResources(GameContext *ctx) {
   
     UnloadPontos();
 }
-
