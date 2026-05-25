@@ -197,22 +197,21 @@ void UpdateJogando(GameContext *ctx) {
     float tempo_ms = GetMusicTimePlayed(ctx->musicaAtual) * 1000.0f;
     float duracao_total = GetMusicTimeLength(ctx->musicaAtual) * 1000.0f;
 
-
     AtualizarPontosTempo(GetFrameTime());
-
 
     ctx->timerCapivara += GetFrameTime();
     if (ctx->timerCapivara >= 0.25f) {
         ctx->timerCapivara = 0.0f;
         ctx->frameCapivara = (ctx->frameCapivara + 1) % 4;
     }
+    
     ctx->timerInimigo += GetFrameTime();
     if (ctx->timerInimigo >= 0.22f) {
         ctx->timerInimigo = 0.0f;
         ctx->frameInimigo = (ctx->frameInimigo + 1) % 4;
     }
 
-   bool musicaAcabou = false;
+    bool musicaAcabou = false;
 
     if (duracao_total > 0 && tempo_ms >= duracao_total - 100.0f) {
         musicaAcabou = true;
@@ -239,6 +238,7 @@ void UpdateJogando(GameContext *ctx) {
         PlayMusicStream(ctx->musicaMenu);
         return;
     }
+    
     for (int i = 0; i < 4; i++) {
         if (ctx->timerClickPista[i] > 0.0f) {
             ctx->timerClickPista[i] -= GetFrameTime();
@@ -248,7 +248,6 @@ void UpdateJogando(GameContext *ctx) {
             ctx->timerClickPista[i] = 0.10f;
         }
     }
-
 
     if (IsKeyPressed(KEY_ESCAPE)) {
         StopMusicStream(ctx->musicaAtual);
@@ -265,7 +264,6 @@ void UpdateJogando(GameContext *ctx) {
         ResetarFeedback();
     }
 
-
     if (((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_LEFT_SUPER)) && IsKeyDown(KEY_LEFT_SHIFT) && IsKeyPressed(KEY_X))) {
         ctx->modoEditor = !ctx->modoEditor;
         StopMusicStream(ctx->musicaAtual);
@@ -274,7 +272,6 @@ void UpdateJogando(GameContext *ctx) {
         TextCopy(ctx->mensagemFeedback, "");
         ResetarFeedback();
     }
-
 
     if (ctx->modoEditor) {
         for (int i = 0; i < 4; i++){
@@ -289,9 +286,12 @@ void UpdateJogando(GameContext *ctx) {
             TextCopy(ctx->mensagemFeedback, "MAPA LIMPO!");
         }
     } else {
+
         for(int i = 0; i < 4; i++){
             if(VerificaInputPista(ctx, i)){
                 Nota *at = inicio;
+                bool acertouNota = false; 
+                
                 while(at != NULL){
                     if(at->ativa && at->botao == i){
                        
@@ -305,14 +305,19 @@ void UpdateJogando(GameContext *ctx) {
                         float y = ctx->yAlvo - (at->tempo_ms - tempo_ms) * vel_nota;
                         float dist = fabsf(y - ctx->yAlvo);
 
-
                         if (dist < RAIO_NOTA * 2) {
                             CalcularAcerto(ctx, dist, RAIO_NOTA * 2.0f);
                             at->ativa = false;
+                            acertouNota = true; 
                             break;
                         }
                     }
                     at = at->prox;
+                }
+                
+
+                if (!acertouNota) {
+                    RegistrarErroSpam(ctx);
                 }
             }
         }

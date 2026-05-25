@@ -3,6 +3,7 @@
 static Texture2D texBom = {0};
 static Texture2D texMuitoBom = {0};
 static Texture2D texPerfeito = {0};
+static Texture2D texErrou = {0}; // NOVA TEXTURA
 static bool texturasCarregadas = false;
 static float feedbackTimer = 0.0f;
 static int tipoFeedback = 0; 
@@ -15,6 +16,7 @@ void InitPontos(void) {
         texBom = LoadTexture("images/mensagens/bom.png");
         texMuitoBom = LoadTexture("images/mensagens/muito_bom.png");
         texPerfeito = LoadTexture("images/mensagens/perfeito.png");
+        texErrou = LoadTexture("images/mensagens/errou.png"); // CARREGANDO A MENSAGEM
         texturasCarregadas = true;
     }
 }
@@ -64,11 +66,26 @@ void RegistrarMiss(GameContext *ctx) {
     }
 }
 
+void RegistrarErroSpam(GameContext *ctx) {
+    streak = 0; 
+    ctx->pontuacao -= 20;
+    
+    if (ctx->pontuacao < 0) {
+        ctx->pontuacao = 0;
+    }
+    
+    tipoFeedback = 4; 
+    feedbackTimer = 0.5f;
+    feedbackOffsetX = (float)(GetRandomValue(-30, 30));
+    feedbackOffsetY = (float)(GetRandomValue(-20, 20));
+}
+
 void DrawFeedback(GameContext *ctx) {
     if (feedbackTimer > 0.0f) {
         Texture2D texDesenhar = texBom;
         if (tipoFeedback == 2) texDesenhar = texMuitoBom;
         else if (tipoFeedback == 3) texDesenhar = texPerfeito;
+        else if (tipoFeedback == 4) texDesenhar = texErrou; 
         
         float escalaTex = 380.0f / (float)texDesenhar.height;
         float drawWidth = texDesenhar.width * escalaTex;
@@ -77,6 +94,7 @@ void DrawFeedback(GameContext *ctx) {
         DrawTextureEx(texDesenhar, pos, 0.0f, escalaTex, WHITE);
     }
     
+
     if (streak > 0) {
         float escalaCap = 0.3f;
         float hCap = ctx->framesCapivara[ctx->frameCapivara].height * escalaCap;
@@ -106,6 +124,7 @@ void UnloadPontos(void) {
         UnloadTexture(texBom);
         UnloadTexture(texMuitoBom);
         UnloadTexture(texPerfeito);
+        UnloadTexture(texErrou); 
         texturasCarregadas = false;
     }
 }

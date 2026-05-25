@@ -1,13 +1,13 @@
 #ifndef PONTOS_H
 #define PONTOS_H
 
-#include "telas.h"
-#include <raylib.h>
+#include "telas.h" 
 
 void InitPontos(void);
 void AtualizarPontosTempo(float deltaTime);
 void CalcularAcerto(GameContext *ctx, float dist, float distMax);
 void RegistrarMiss(GameContext *ctx);
+void RegistrarErroSpam(GameContext *ctx); // NOVA FUNÇÃO AQUI
 void DrawFeedback(GameContext *ctx);
 void ResetarFeedback(void);
 void UnloadPontos(void);
