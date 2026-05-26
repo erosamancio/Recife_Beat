@@ -3,7 +3,7 @@
 static Texture2D texBom = {0};
 static Texture2D texMuitoBom = {0};
 static Texture2D texPerfeito = {0};
-static Texture2D texErrou = {0}; // NOVA TEXTURA
+static Texture2D texErrou = {0};
 static bool texturasCarregadas = false;
 static float feedbackTimer = 0.0f;
 static int tipoFeedback = 0; 
@@ -16,7 +16,7 @@ void InitPontos(void) {
         texBom = LoadTexture("images/mensagens/bom.png");
         texMuitoBom = LoadTexture("images/mensagens/muito_bom.png");
         texPerfeito = LoadTexture("images/mensagens/perfeito.png");
-        texErrou = LoadTexture("images/mensagens/errou.png"); // CARREGANDO A MENSAGEM
+        texErrou = LoadTexture("images/mensagens/errou.png");
         texturasCarregadas = true;
     }
 }
@@ -81,19 +81,30 @@ void RegistrarErroSpam(GameContext *ctx) {
 }
 
 void DrawFeedback(GameContext *ctx) {
-    if (feedbackTimer > 0.0f) {
+    if(feedbackTimer > 0.0f){
         Texture2D texDesenhar = texBom;
-        if (tipoFeedback == 2) texDesenhar = texMuitoBom;
-        else if (tipoFeedback == 3) texDesenhar = texPerfeito;
-        else if (tipoFeedback == 4) texDesenhar = texErrou; 
-        
-        float escalaTex = 380.0f / (float)texDesenhar.height;
+
+        if(tipoFeedback == 2) texDesenhar = texMuitoBom;
+        else if(tipoFeedback == 3) texDesenhar = texPerfeito;
+        else if(tipoFeedback == 4) texDesenhar = texErrou;
+
+        float alturaDesejada = 380.0f;
+
+        if(tipoFeedback == 1) alturaDesejada = 570.0f;      // Tamanho da msg bom
+        else if(tipoFeedback == 2) alturaDesejada = 580.0f; // Tamanho da msg muito bom
+        else if(tipoFeedback == 3) alturaDesejada = 580.0f; // Tamanho da msg perfeito
+        else if(tipoFeedback == 4) alturaDesejada = 380.0f; // Tamanho da msg erro
+
+        float escalaTex = alturaDesejada / (float)texDesenhar.height;
         float drawWidth = texDesenhar.width * escalaTex;
-        
-        Vector2 pos = { (float)ctx->largura / 2.0f - drawWidth / 2.0f + feedbackOffsetX, 80.0f + feedbackOffsetY };
+
+        Vector2 pos = {
+            (float)ctx->largura / 2.0f - drawWidth / 2.0f + feedbackOffsetX,
+            80.0f + feedbackOffsetY
+        };
+
         DrawTextureEx(texDesenhar, pos, 0.0f, escalaTex, WHITE);
     }
-    
 
     if (streak > 0) {
         float escalaCap = 0.3f;
@@ -101,15 +112,15 @@ void DrawFeedback(GameContext *ctx) {
         float wCap = ctx->framesCapivara[ctx->frameCapivara].width * escalaCap;
         float capX = ctx->deslocamentoX + 550.0f;
         float capY = ctx->altura / 2.0f - (hCap / 2.0f);
-        
+
         const char* streakText = TextFormat("%d", streak);
         Vector2 textSize = MeasureTextEx(ctx->fonteTitulo, streakText, 50, 2);
-        
+
         Vector2 posText = {
             capX + (wCap / 2.0f) - (textSize.x / 2.0f),
             capY - textSize.y - 15.0f
         };
-        
+
         DrawTextEx(ctx->fonteTitulo, streakText, posText, 50, 2, GOLD);
     }
 }
