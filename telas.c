@@ -226,7 +226,8 @@ void UpdateJogando(GameContext *ctx) {
         ResetarFeedback();
         capivaraTristeTimer = 0.0f;
 
-        if (!ctx->modoEditor && ctx->pontuacao > 0) {
+        // Modificado: Vai sempre para INSERIR_NOME se não for modo editor, independentemente dos pontos
+        if (!ctx->modoEditor) {
             ctx->estadoAtual = INSERIR_NOME;
             ctx->nomeInput[0] = '\0';
             ctx->contLetras = 0;
@@ -654,6 +655,12 @@ void DrawTransicao(GameContext *ctx) {
 void DrawInserirNome(GameContext *ctx) {
     Vector2 tamTitulo = MeasureTextEx(ctx->fonteTitulo, "FIM DE JOGO", 60, 2);
     DrawTextEx(ctx->fonteTitulo, "FIM DE JOGO", (Vector2){ctx->largura / 2 - tamTitulo.x / 2, ctx->altura / 4}, 60, 2, WHITE);
+
+    // Mensagem de vitória ou derrota posicionada entre FIM DE JOGO e PONTUACAO
+    const char* msgStatus = (ctx->comboErros >= 8) ? "Muitos erros em sequencia!" : "Parabens, concluiu a musica!";
+    Color corStatus = (ctx->comboErros >= 8) ? RED : GREEN;
+    float statusLargura = MeasureTextEx(ctx->fonteTitulo, msgStatus, 30, 2).x;
+    DrawTextEx(ctx->fonteTitulo, msgStatus, (Vector2){ctx->largura / 2 - statusLargura / 2, ctx->altura / 4 + 70}, 30, 2, corStatus);
 
     const char* ptsStr = TextFormat("PONTUACAO: %d", ctx->pontuacao);
     float ptsLargura = MeasureTextEx(ctx->fonteTitulo, ptsStr, 40, 2).x;
