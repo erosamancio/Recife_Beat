@@ -89,23 +89,26 @@ void DrawFeedback(GameContext *ctx) {
         else if(tipoFeedback == 4) texDesenhar = texErrou;
 
         float escalaTex = 1.0f;
+        float basePosY = 0.0f;
 
         if(tipoFeedback == 4) {
             float alturaErrou = 380.0f;
             escalaTex = alturaErrou / (float)texDesenhar.height;
+            basePosY = 80.0f;
         } else {
             float alturaAcertos = 580.0f;
             if(tipoFeedback == 1) alturaAcertos = 770.0f;
             else if(tipoFeedback == 2) alturaAcertos = 780.0f;
             else if(tipoFeedback == 3) alturaAcertos = 780.0f;
             escalaTex = alturaAcertos / (float)texDesenhar.height;
+            basePosY = -10.0f;
         }
 
         float drawWidth = texDesenhar.width * escalaTex;
 
         Vector2 pos = {
             (float)ctx->largura / 2.0f - drawWidth / 2.0f + feedbackOffsetX,
-             feedbackOffsetY - 10.0f
+            basePosY + feedbackOffsetY
         };
 
         DrawTextureEx(texDesenhar, pos, 0.0f, escalaTex, WHITE);
