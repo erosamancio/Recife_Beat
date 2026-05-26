@@ -52,6 +52,7 @@ void InitGameContext(GameContext *ctx) {
     ctx->pontuacao = 0;
     ctx->contLetras = 0;
     ctx->exibindoRanking = false; 
+    ctx->comboErros = 0; // Inicializa o contador de erros consecutivos
     
     ctx->teclas[0] = KEY_C; ctx->teclas[1] = KEY_V;
     ctx->teclas[2] = KEY_N; ctx->teclas[3] = KEY_M;
@@ -148,6 +149,10 @@ void UpdateMenuMusicas(GameContext *ctx) {
         carregar_mapa(ctx->mapaAtualCaminho);
         ctx->estadoAtual = TRANSICAO;
         ctx->alphaTransicao = 1.0f;
+        
+        ctx->comboErros = 0; // Reseta erros ao iniciar nova música
+        SetMusicVolume(ctx->musicaAtual, 1.0f); // Garante volume em 100% no início
+        
         PlayMusicStream(ctx->musicaAtual);
     }
     if (ControleVoltarPressionado()) ctx->estadoAtual = MENU_PRINCIPAL;
@@ -207,6 +212,11 @@ void UpdateJogando(GameContext *ctx) {
     }
 
     if (!IsMusicStreamPlaying(ctx->musicaAtual)) {
+        musicaAcabou = true;
+    }
+
+    // Condição de fim de jogo por atingir 8 erros seguidos
+    if (ctx->comboErros >= 8) {
         musicaAcabou = true;
     }
 
@@ -278,6 +288,32 @@ void UpdateJogando(GameContext *ctx) {
             TextCopy(ctx->mensagemFeedback, "MAPA LIMPO!");
         }
     } else {
+        // Checagem de notas perdidas que passaram da tela (Sem ação do jogador)
+        Nota *atMiss = inicio;
+        while(atMiss != NULL) {
+            if(atMiss->ativa) {
+                float vel_nota = 0.42f;
+                if (duracao_total > 0) {
+                    if (atMiss->tempo_ms < duracao_total * 0.25f) vel_nota = 0.32f;
+                    else if (atMiss->tempo_ms < duracao_total * 0.80f) vel_nota = 0.42f;
+                    else vel_nota = 0.55f;
+                }
+                float y = ctx->yAlvo - (atMiss->tempo_ms - tempo_ms) * vel_nota;
+                
+                if(y > ctx->altura + 50){
+                    RegistrarMiss(ctx);
+                    capivaraTristeTimer = 0.5f;
+                    atMiss->ativa = false;
+                    ctx->comboErros++; // Incrementa erro por deixar passar
+                }
+            }
+            atMiss = atMiss->prox;
+        }
+
+        // Aplica o volume com base nos erros consecutivos acumulados neste frame
+        float volumeMusica = 1.0f - (ctx->comboErros * 0.1f);
+        if (volumeMusica < 0.0f) volumeMusica = 0.0f;
+        SetMusicVolume(ctx->musicaAtual, volumeMusica);
 
         for(int i = 0; i < 4; i++){
             if(VerificaInputPista(ctx, i)){
@@ -301,6 +337,7 @@ void UpdateJogando(GameContext *ctx) {
                             CalcularAcerto(ctx, dist, RAIO_NOTA * 2.0f);
                             at->ativa = false;
                             acertouNota = true; 
+                            ctx->comboErros = 0; // Acertou: limpa a sequência de erros
                             break;
                         }
                     }
@@ -310,6 +347,7 @@ void UpdateJogando(GameContext *ctx) {
                 if (!acertouNota) {
                     RegistrarErroSpam(ctx);
                     capivaraTristeTimer = 0.5f;
+                    ctx->comboErros++; // Incrementa erro por clique incorreto / spam
                 }
             }
         }
@@ -525,8 +563,8 @@ void DrawJogando(GameContext *ctx) {
         Texture2D texBotaoAlvo = (ctx->timerClickPista[i] > 0.0f) ? ctx->btnClicado[i] : ctx->btnBase[i];
         Rectangle sourceRec = { 0.0f, 0.0f, (float)texBotaoAlvo.width, (float)texBotaoAlvo.height };
         Rectangle destRec = { 
-            x_base_pista,                             
-            ctx->yAlvo,                               
+            x_base_pista,                               
+            ctx->yAlvo,                                               
             (float)texBotaoAlvo.width * escalaBotoesBase,    
             (float)texBotaoAlvo.height * escalaBotoesBase    
         };
@@ -554,12 +592,6 @@ void DrawJogando(GameContext *ctx) {
                 else vel_nota = 0.55f;
             }
             float y = ctx->yAlvo - (at->tempo_ms - tempo) * vel_nota;
-            
-            if(y > ctx->altura + 50){
-                RegistrarMiss(ctx);
-                capivaraTristeTimer = 0.5f;
-                at->ativa = false;
-            }
 
             if(y > y_horizonte && y < ctx->altura){
                 float progresso = (y - y_horizonte) / (ctx->yAlvo - y_horizonte);
@@ -600,6 +632,11 @@ void DrawJogando(GameContext *ctx) {
         DrawFeedback(ctx);
     }
     
+    // Mostra o combo de erros na tela para depuração (Opcional, remova se preferir arte limpa)
+    if (ctx->comboErros > 0) {
+         DrawTextEx(ctx->fonteTitulo, TextFormat("ERROS: %d/8", ctx->comboErros), (Vector2){30, 70}, 24, 2, RED);
+    }
+
     Vector2 tamGameplay = MeasureTextEx(ctx->fonteTitulo, catalogo[ctx->opcaoMusica].titulo, 30, 2);
     DrawTextEx(ctx->fonteTitulo, catalogo[ctx->opcaoMusica].titulo, (Vector2){ctx->largura - tamGameplay.x - 30, 30}, 30, 2, WHITE);
 

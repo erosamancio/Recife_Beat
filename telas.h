@@ -33,6 +33,7 @@ typedef struct {
     char nomeInput[15];
     int contLetras;
     int teclas[4];
+    int comboErros;
 
     // Nossas Fontes
     Font fonteTitulo;
