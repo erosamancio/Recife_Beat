@@ -1,5 +1,6 @@
 #include "telas.h"
 #include "pontos.h"
+#include "controles.h"
 #include <math.h>
 #include <stdlib.h>
 
@@ -86,11 +87,10 @@ void InitGameContext(GameContext *ctx) {
 
 void UpdateMenuPrincipal(GameContext *ctx) {
     UpdateMusicStream(ctx->musicaMenu);
-    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) ctx->opcaoMenu = (ctx->opcaoMenu + 1) % 3;
-    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) ctx->opcaoMenu = (ctx->opcaoMenu - 1 + 3) % 3;
+   if (ControleBaixoPressionado()) ctx->opcaoMenu = (ctx->opcaoMenu + 1) % 3;
+   if (ControleCimaPressionado()) ctx->opcaoMenu = (ctx->opcaoMenu - 1 + 3) % 3;
 
-
-    if (IsKeyPressed(KEY_ENTER)) {
+    if (ControleSelecionarPressionado()) {
         if (ctx->opcaoMenu == 0) {
             ctx->estadoAtual = MENU_MUSICAS;
             carregar_ranking_tela(catalogo[ctx->opcaoMusica].arquivoRanking);
@@ -111,20 +111,20 @@ void UpdateMenuPrincipal(GameContext *ctx) {
 void UpdateMenuMusicas(GameContext *ctx) {
     UpdateMusicStream(ctx->musicaMenu);
     
-    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) {
+    if (ControleBaixoPressionado()) {
         ctx->opcaoMusica = (ctx->opcaoMusica + 1) % NUM_MUSICAS;
         carregar_ranking_tela(catalogo[ctx->opcaoMusica].arquivoRanking);
     }
-    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) {
+    if (ControleCimaPressionado()) {
         ctx->opcaoMusica = (ctx->opcaoMusica - 1 + NUM_MUSICAS) % NUM_MUSICAS;
         carregar_ranking_tela(catalogo[ctx->opcaoMusica].arquivoRanking);
     }
     
-    if (IsKeyPressed(KEY_R)) {
+    if (ControleRankingPressionado()) {
         ctx->exibindoRanking = !ctx->exibindoRanking;
     }
 
-    if (IsKeyPressed(KEY_ENTER)) {
+    if (ControleSelecionarPressionado()) {
         liberar_notas();
        
         if (IsMusicValid(ctx->musicaAtual)) {
@@ -152,16 +152,16 @@ void UpdateMenuMusicas(GameContext *ctx) {
         ctx->alphaTransicao = 1.0f;
         PlayMusicStream(ctx->musicaAtual);
     }
-    if (IsKeyPressed(KEY_ESCAPE)) ctx->estadoAtual = MENU_PRINCIPAL;
+    if (ControleVoltarPressionado()) ctx->estadoAtual = MENU_PRINCIPAL;
 }
 
 
 void UpdateMenuAjustes(GameContext *ctx) {
     UpdateMusicStream(ctx->musicaMenu);
-    if (IsKeyPressed(KEY_RIGHT) && ctx->volumeGeral < 1.0f) ctx->volumeGeral += 0.1f;
-    if (IsKeyPressed(KEY_LEFT) && ctx->volumeGeral > 0.0f) ctx->volumeGeral -= 0.1f;
+    if (ControleDireitaPressionado() && ctx->volumeGeral < 1.0f) ctx->volumeGeral += 0.1f;
+    if (ControleEsquerdaPressionado() && ctx->volumeGeral > 0.0f) ctx->volumeGeral -= 0.1f;
     SetMasterVolume(ctx->volumeGeral);
-    if (IsKeyPressed(KEY_ESCAPE)) ctx->estadoAtual = MENU_PRINCIPAL;
+    if (ControleVoltarPressionado()) ctx->estadoAtual = MENU_PRINCIPAL;
 }
 
 
@@ -179,16 +179,7 @@ void UpdateTransicao(GameContext *ctx) {
 
 
 bool VerificaInputPista(GameContext *ctx, int pista){
-    if (IsKeyPressed(ctx->teclas[pista])) return true;
-
-    if(IsGamepadAvailable(0)){
-        if (pista == 0 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) return true;
-        if (pista == 1 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) return true;
-        if (pista == 2 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_LEFT)) return true;
-        if (pista == 3 && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)) return true;
-    }
-
-    return false;
+    return ControlePistaPressionada(pista, ctx->teclas[pista]);
 }
 
 
