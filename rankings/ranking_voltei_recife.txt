@@ -1,5 +1,4 @@
 herosbrine 53578
-lucs 43743
-erosmaioral 19000
+lucas 43743
 lucas 18450
-erosgol 11600
+
