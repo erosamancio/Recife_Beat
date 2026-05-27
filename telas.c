@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdlib.h>
 
+// DEFINICOES GERAIS
 #define NUM_MUSICAS 5
 #define RAIO_NOTA 30
 #define TOTAL_INIMIGOS 4
@@ -36,6 +37,7 @@ const char* opcoesInimigos[] = {
 static Texture2D texCapivaraTriste = {0};
 static float capivaraTristeTimer = 0.0f;
 
+// INICIALIZACAO DO CONTEXTO
 void InitGameContext(GameContext *ctx) {
     ctx->largura = GetScreenWidth();
     ctx->altura = GetScreenHeight();
@@ -52,7 +54,7 @@ void InitGameContext(GameContext *ctx) {
     ctx->pontuacao = 0;
     ctx->contLetras = 0;
     ctx->exibindoRanking = false; 
-    ctx->comboErros = 0; // Inicializa o contador de erros consecutivos
+    ctx->comboErros = 0; 
     
     ctx->teclas[0] = KEY_C; ctx->teclas[1] = KEY_V;
     ctx->teclas[2] = KEY_N; ctx->teclas[3] = KEY_M;
@@ -86,6 +88,7 @@ void InitGameContext(GameContext *ctx) {
     InitPontos();
 }
 
+// ATUALIZACOES DE MENUS
 void UpdateMenuPrincipal(GameContext *ctx) {
     UpdateMusicStream(ctx->musicaMenu);
     if (ControleBaixoPressionado()) ctx->opcaoMenu = (ctx->opcaoMenu + 1) % 3;
@@ -150,8 +153,8 @@ void UpdateMenuMusicas(GameContext *ctx) {
         ctx->estadoAtual = TRANSICAO;
         ctx->alphaTransicao = 1.0f;
         
-        ctx->comboErros = 0; // Reseta erros ao iniciar nova música
-        SetMusicVolume(ctx->musicaAtual, 1.0f); // Garante volume em 100% no início
+        ctx->comboErros = 0; 
+        SetMusicVolume(ctx->musicaAtual, 1.0f); 
         
         PlayMusicStream(ctx->musicaAtual);
     }
@@ -178,10 +181,13 @@ void UpdateTransicao(GameContext *ctx) {
     }
 }
 
+// GAMEPLAY
 bool VerificaInputPista(GameContext *ctx, int pista){
     return ControlePistaPressionada(pista, ctx->teclas[pista]);
 }
-
+// FUNÇÃO 6 DA ESTRUTURA DE DADOS
+// controla a lógica principal da partida em tempo real,
+// atualizando a descida das notas e alterando a estrutura de dados para registrar os acertos ou erros do jogador
 void UpdateJogando(GameContext *ctx) {
     UpdateMusicStream(ctx->musicaAtual);
     float tempo_ms = GetMusicTimePlayed(ctx->musicaAtual) * 1000.0f;
@@ -215,7 +221,6 @@ void UpdateJogando(GameContext *ctx) {
         musicaAcabou = true;
     }
 
-    // Condição de fim de jogo por atingir 8 erros seguidos
     if (ctx->comboErros >= 8) {
         musicaAcabou = true;
     }
@@ -226,7 +231,6 @@ void UpdateJogando(GameContext *ctx) {
         ResetarFeedback();
         capivaraTristeTimer = 0.0f;
 
-        // Modificado: Vai sempre para INSERIR_NOME se não for modo editor, independentemente dos pontos
         if (!ctx->modoEditor) {
             ctx->estadoAtual = INSERIR_NOME;
             ctx->nomeInput[0] = '\0';
@@ -276,6 +280,7 @@ void UpdateJogando(GameContext *ctx) {
         capivaraTristeTimer = 0.0f;
     }
 
+    // MODO EDITOR
     if (ctx->modoEditor) {
         for (int i = 0; i < 4; i++){
             if(VerificaInputPista(ctx, i)) inserir_nota((int)tempo_ms, i);
@@ -289,7 +294,7 @@ void UpdateJogando(GameContext *ctx) {
             TextCopy(ctx->mensagemFeedback, "MAPA LIMPO!");
         }
     } else {
-        // Checagem de notas perdidas que passaram da tela (Sem ação do jogador)
+    // VALIDACAO DE NOTAS
         Nota *atMiss = inicio;
         while(atMiss != NULL) {
             if(atMiss->ativa) {
@@ -305,13 +310,12 @@ void UpdateJogando(GameContext *ctx) {
                     RegistrarMiss(ctx);
                     capivaraTristeTimer = 0.5f;
                     atMiss->ativa = false;
-                    ctx->comboErros++; // Incrementa erro por deixar passar
+                    ctx->comboErros++; 
                 }
             }
             atMiss = atMiss->prox;
         }
 
-        // Aplica o volume com base nos erros consecutivos acumulados neste frame
         float volumeMusica = 1.0f - (ctx->comboErros * 0.1f);
         if (volumeMusica < 0.0f) volumeMusica = 0.0f;
         SetMusicVolume(ctx->musicaAtual, volumeMusica);
@@ -338,7 +342,7 @@ void UpdateJogando(GameContext *ctx) {
                             CalcularAcerto(ctx, dist, RAIO_NOTA * 2.0f);
                             at->ativa = false;
                             acertouNota = true; 
-                            ctx->comboErros = 0; // Acertou: limpa a sequência de erros
+                            ctx->comboErros = 0; 
                             break;
                         }
                     }
@@ -348,13 +352,14 @@ void UpdateJogando(GameContext *ctx) {
                 if (!acertouNota) {
                     RegistrarErroSpam(ctx);
                     capivaraTristeTimer = 0.5f;
-                    ctx->comboErros++; // Incrementa erro por clique incorreto / spam
+                    ctx->comboErros++; 
                 }
             }
         }
     }
 }
 
+// TELA INSERIR NOME
 void UpdateInserirNome(GameContext *ctx) {
     UpdateMusicStream(ctx->musicaMenu);
     int key = GetCharPressed();
@@ -385,6 +390,7 @@ void UpdateInserirNome(GameContext *ctx) {
     }
 }
 
+// DESENHO
 void DrawMenuPrincipal(GameContext *ctx) {
     Rectangle src = {0, 0, (float)ctx->framesMenuTitulo[ctx->frameMenu].width, (float)ctx->framesMenuTitulo[ctx->frameMenu].height};
     Rectangle dst = {0, 0, (float)ctx->largura, (float)ctx->altura};
@@ -633,7 +639,6 @@ void DrawJogando(GameContext *ctx) {
         DrawFeedback(ctx);
     }
     
-    // Mostra o combo de erros na tela para depuração (Opcional, remova se preferir arte limpa)
     if (ctx->comboErros > 0) {
          DrawTextEx(ctx->fonteTitulo, TextFormat("ERROS: %d/8", ctx->comboErros), (Vector2){30, 70}, 24, 2, RED);
     }
@@ -656,7 +661,6 @@ void DrawInserirNome(GameContext *ctx) {
     Vector2 tamTitulo = MeasureTextEx(ctx->fonteTitulo, "FIM DE JOGO", 60, 2);
     DrawTextEx(ctx->fonteTitulo, "FIM DE JOGO", (Vector2){ctx->largura / 2 - tamTitulo.x / 2, ctx->altura / 4}, 60, 2, WHITE);
 
-    // Mensagem de vitória ou derrota posicionada entre FIM DE JOGO e PONTUACAO
     const char* msgStatus = (ctx->comboErros >= 8) ? "Muitos erros em sequencia!" : "Parabens, concluiu a musica!";
     Color corStatus = (ctx->comboErros >= 8) ? RED : GREEN;
     float statusLargura = MeasureTextEx(ctx->fonteTitulo, msgStatus, 30, 2).x;
@@ -683,6 +687,7 @@ void DrawInserirNome(GameContext *ctx) {
     DrawTextEx(ctx->fonteTitulo, "Pressione ENTER para salvar", (Vector2){ctx->largura / 2 - enterLargura / 2, ctx->altura - 100}, 20, 2, DARKGRAY);
 }
 
+// LIMPEZA E FINALIZACAO DE RECURSOS
 void UnloadGameResources(GameContext *ctx) {
     for(int i=0; i<4; i++) UnloadTexture(ctx->framesCapivara[i]);
     for(int i=0; i<6; i++) UnloadTexture(ctx->framesMenuTitulo[i]);
