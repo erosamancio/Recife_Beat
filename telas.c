@@ -505,7 +505,7 @@ void DrawJogando(GameContext *ctx) {
         (Rectangle){0,0,ctx->largura, ctx->altura}, (Vector2){0,0}, 0, WHITE);
 
     float escala = 0.3f;
-    float escalaBotoesBase = 0.07f;
+    float escalaBotoesBase = 0.10f;
     float hCap = ctx->framesCapivara[ctx->frameCapivara].height * escala;
     float wCap = ctx->framesCapivara[ctx->frameCapivara].width * escala;
     float originalX = ctx->deslocamentoX + 550.0f;
@@ -586,7 +586,7 @@ void DrawJogando(GameContext *ctx) {
 
     float tempo = GetMusicTimePlayed(ctx->musicaAtual) * 1000.0f;
     float duracao_total = GetMusicTimeLength(ctx->musicaAtual) * 1000.0f;
-    float escalaBaseNota = 0.08f;
+    float escalaBaseNota = 0.10f;
     Nota *at = inicio;
     while(at != NULL) {
         if(at->ativa) {
