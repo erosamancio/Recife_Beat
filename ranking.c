@@ -3,12 +3,14 @@
 Score rankingTela[MAX_SCORES];
 int qtdRankingTela = 0;
 
+// Função auxiliar do Quicksort
 void trocar(Score* a, Score* b) {
     Score temp = *a;
     *a = *b;
     *b = temp;
 }
 
+// Lógica de particionamento do Quicksort
 int particao(Score arr[], int baixo, int alto){
     int pivo = arr[alto].pontos;
     int i = (baixo - 1);
@@ -23,6 +25,7 @@ int particao(Score arr[], int baixo, int alto){
     return (i + 1);
 }
 
+// ALGORITMO DE ORDENAÇÃO PRINCIPAL
 void quicksort(Score arr[], int baixo, int alto){
     if(baixo < alto){
         int pi = particao(arr, baixo, alto);
@@ -31,34 +34,35 @@ void quicksort(Score arr[], int baixo, int alto){
     }
 }
 
+// Atualiza o ranking
 void salvar_score(const char* arquivo, const char* nome_jogador, int nova_pontuacao) {
     if (nova_pontuacao == 0) return;
 
     Score ranking[MAX_SCORES + 1];
     int qtd = 0;
+    
+    // Carrega o ranking salvo
     FILE *f = fopen(arquivo, "r");
     if(f != NULL){
         while(fscanf(f, "%s %d", ranking[qtd].nome, &ranking[qtd].pontos) != EOF){
             qtd++;
-            if(qtd >= MAX_SCORES)break;
+            if(qtd >= MAX_SCORES) break;
         }
         fclose(f);
     }
 
+    // Adiciona a pontuação da partida atual
     TextCopy(ranking[qtd].nome, nome_jogador); 
     ranking[qtd].pontos = nova_pontuacao;
     qtd++;
 
+    // Aplica o Quicksort
     quicksort(ranking, 0, qtd - 1);
 
+    // Sobrescreve o arquivo mantendo apenas o limite máximo
     f = fopen(arquivo, "w");
     if(f != NULL){
-        int limite;
-        if(qtd > MAX_SCORES){
-            limite = MAX_SCORES;
-        }else{ 
-            limite = qtd;
-        }
+        int limite = (qtd > MAX_SCORES) ? MAX_SCORES : qtd;
         for(int i = 0; i < limite; i++) {
             fprintf(f, "%s %d\n", ranking[i].nome, ranking[i].pontos);
         }
@@ -66,6 +70,7 @@ void salvar_score(const char* arquivo, const char* nome_jogador, int nova_pontua
     }
 }
 
+// Lê os dados do arquivo .txt e desenha a tela de menu
 void carregar_ranking_tela(const char* arquivo){
     qtdRankingTela = 0;
     FILE *f = fopen(arquivo, "r");

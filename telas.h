@@ -37,7 +37,7 @@ typedef struct {
 
     // Nossas Fontes
     Font fonteTitulo;
-    Font fonteBebas; // Nova fonte para o Menu de Músicas
+    Font fonteBebas; // fonte para o Menu de Músicas
 
     // Texturas de fundo e elementos base
     Texture2D mapaBase;
