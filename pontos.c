@@ -1,10 +1,5 @@
 #include "pontos.h"
 
-// ----------------------------------------------------------------------------------
-// SISTEMA DE PONTUAÇÃO E FEEDBACK VISUAL
-// Gerencia os acertos, erros, multiplicadores de combo e desenha as mensagens na tela.
-// ----------------------------------------------------------------------------------
-
 static Texture2D texBom = {0};
 static Texture2D texMuitoBom = {0};
 static Texture2D texPerfeito = {0};
