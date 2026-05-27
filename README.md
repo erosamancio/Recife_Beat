@@ -56,7 +56,7 @@ Certifique-se de ter instalado em sua máquina:
 
 Abra seu terminal e execute:
 ```bash
-git clone [https://github.com/erosamancio/Recife_Beat.git]
+git clone https://github.com/erosamancio/Recife_Beat.git
 cd Recife_Beat
 ```
 
