@@ -73,6 +73,16 @@ make clean
 ```
 ---
 
+## 🎥 Demonstração do Jogo
+
+<div align="center">
+
+[![Assista à demonstração do Recife Beat](https://img.youtube.com/vi/k00rMY_O28A/hqdefault.jpg)](https://www.youtube.com/watch?v=k00rMY_O28A)
+
+</div>
+
+---
+
 ## 👥 Equipe de Desenvolvimento
 
 <div align="center">
