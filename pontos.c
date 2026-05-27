@@ -47,7 +47,7 @@ void CalcularAcerto(GameContext *ctx, float dist, float distMax) {
         tipoFeedback = 1; // Bom
     }
     
-    streak++; // Incrementa o combo
+    streak++;
     
     // Aplica multiplicador de pontuação
     float mult = 1.0f;
@@ -67,7 +67,7 @@ void CalcularAcerto(GameContext *ctx, float dist, float distMax) {
 
 // Penalidade por deixar a nota passar da tela
 void RegistrarMiss(GameContext *ctx) {
-    streak = 0; // Zera o combo
+    streak = 0;
     ctx->pontuacao -= 10;
     if (ctx->pontuacao < 0) {
         ctx->pontuacao = 0;
@@ -76,7 +76,7 @@ void RegistrarMiss(GameContext *ctx) {
 
 // Penalidade por apertar o botão na hora errada ou fazer spam
 void RegistrarErroSpam(GameContext *ctx) {
-    streak = 0; // Zera o combo
+    streak = 0;
     ctx->pontuacao -= 20;
     
     if (ctx->pontuacao < 0) {

@@ -3,14 +3,12 @@
 Score rankingTela[MAX_SCORES];
 int qtdRankingTela = 0;
 
-// Função auxiliar do Quicksort
 void trocar(Score* a, Score* b) {
     Score temp = *a;
     *a = *b;
     *b = temp;
 }
 
-// Lógica de particionamento do Quicksort
 int particao(Score arr[], int baixo, int alto){
     int pivo = arr[alto].pontos;
     int i = (baixo - 1);
@@ -56,7 +54,6 @@ void salvar_score(const char* arquivo, const char* nome_jogador, int nova_pontua
     ranking[qtd].pontos = nova_pontuacao;
     qtd++;
 
-    // Aplica o Quicksort
     quicksort(ranking, 0, qtd - 1);
 
     // Sobrescreve o arquivo mantendo apenas o limite máximo

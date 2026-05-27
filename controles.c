@@ -64,7 +64,7 @@ bool ControleDireitaPressionado(void) {
 
 // AÇÕES DE INTERFACE
 bool ControleSelecionarPressionado(void) {
-    // Teclado (Enter/Espaço) ou Controle (Botão A / Cruz)
+    // Teclado (Enter/Espaço) ou Controle (Botão A / X)
     if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) return true;
     if(IsGamepadButtonPressed(CONTROLE_ID, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) return true;
 

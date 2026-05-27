@@ -5,7 +5,7 @@ int main() {
     // CONFIGURAÇÃO INICIAL DA JANELA E TELA CHEIA
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
     InitWindow(800, 600, "Recife Beat");
-    SetExitKey(0); // Desativa o fechamento automático no ESC
+    SetExitKey(0);
     
     int monitor = GetCurrentMonitor();
     SetWindowSize(GetMonitorWidth(monitor), GetMonitorHeight(monitor));
@@ -38,8 +38,6 @@ int main() {
 
     // LOOP PRINCIPAL DO JOGO 
     while (!WindowShouldClose() && !jogo.deveFechar) {
-        
-        // ATUALIZAÇÃO DE LÓGICA 
         switch (jogo.estadoAtual) {
             case MENU_PRINCIPAL: UpdateMenuPrincipal(&jogo); break;
             case MENU_MUSICAS:   UpdateMenuMusicas(&jogo); break;

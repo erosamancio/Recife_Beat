@@ -1,6 +1,5 @@
 #include "mapa.h"
 
-// Ponteiros globais para controlar o início e o final da lista encadeada
 Nota *inicio = NULL;
 Nota *fim = NULL; 
 
@@ -25,14 +24,14 @@ void inserir_nota(int tempo, int botao) {
 }
 
 // FUNÇÃO 2 DA ESTRUTURA DE DADOS
-// Percorre a lista encadeada e libera a memória de cada nó (Essencial para evitar Memory Leak)
+// Percorre a lista encadeada e libera a memória de cada nó
 void liberar_notas() {
     Nota *atual = inicio;
 
     while (atual != NULL) {
         Nota *temp = atual;
         atual = atual->prox;
-        free(temp); // Desaloca o nó atual da memória
+        free(temp);
     }
 
     inicio = NULL;
@@ -64,7 +63,7 @@ void salvar_mapa(const char *nomeArquivo) {
 }
 
 // FUNÇÃO 5 DA ESTRUTURA DE DADOS
-// Lê o arquivo .txt e constrói/popula a lista encadeada na memória em tempo de execução
+// Lê o arquivo .txt e popula a lista encadeada na memória em tempo de execução
 void carregar_mapa(const char *nomeArquivo) {
     liberar_notas(); // Limpa qualquer mapa que já esteja na memória antes de carregar um novo
     
