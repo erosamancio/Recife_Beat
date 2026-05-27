@@ -12,7 +12,7 @@ O jogador é desafiado a manter o ritmo e a precisão apertando as teclas direci
 
 Este projeto foi desenvolvido aplicando conceitos fundamentais de Algoritmo e Estrutura de Dados:
 
-* **Listas Encadeadas:** O coração da gameplay. Cada passo da música é um nó contendo `tempo + tecla + próximo passo`. A lista permite manipulação dinâmica (inserir/remover notas no Editor) e é percorrida em tempo real durante o jogo.
+* **Listas Simplesmente Encadeadas:** O coração da gameplay. Cada passo da música é um nó contendo `tempo + tecla + próximo passo`. A lista permite manipulação dinâmica (inserir/remover notas no Editor) e é percorrida em tempo real durante o jogo.
 * **Algoritmo de Ordenação (QuickSort):** Utilizado no sistema de Ranking. Escolhido por sua alta eficiência (`O(n log n)`), o QuickSort organiza rapidamente as pontuações dos jogadores para exibir os melhores resultados na tela.
 * **Modularidade:** Código limpo e estruturado com funções bem definidas como `carregar_mapa()`, `salvar_mapa()`, `executar_jogo()`, entre outras.
 * **Funções que Envolvem a Estrutura de Dados Principal do Jogo:** `inserir_nota()`, `liberar_notas()`, `resetar_notas()`, `salvar_mapa()`, `carregar_mapa()` e um `laço de travessia iterativa (while(at != NULL))` 
@@ -28,7 +28,7 @@ Este projeto foi desenvolvido aplicando conceitos fundamentais de Algoritmo e Es
 | **Acertar Notas** | `C`, `V`, `N`, `M` | `←`, `→`, `□ ou X`, `○ ou B` |
 | **Ver Ranking** | `R` | `□` |
 | **Navegar no Menu** | `Setas (↑, ↓)` | `Setas (↑, ↓) ou analógico` |
-| **Selecionar Opção** | `Enter` |
+| **Selecionar Opção** | `Enter` | `X ou A` |
 | **Voltar** | `ESC` |`○ ou B`|
 
 </div>
